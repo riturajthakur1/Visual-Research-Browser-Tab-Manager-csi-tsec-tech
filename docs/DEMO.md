@@ -12,7 +12,7 @@
 2. Load `dist/` as an unpacked extension in a fresh browser profile, and grant site access when asked.
 3. Open the Thread.io side panel and pin it.
 4. Rehearse the exact browsing path below twice; Gemma's drafted questions vary slightly between runs.
-5. Keep a recorded backup of the full run.
+5. Consider recording a backup video of a clean run in case the venue Wi-Fi or laptop misbehaves.
 
 ## Three-minute script
 

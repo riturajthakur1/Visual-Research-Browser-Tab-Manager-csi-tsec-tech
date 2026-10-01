@@ -69,10 +69,14 @@ async function waitForNode(url: string, done: (n: DbNode) => boolean, timeout = 
   }
 }
 
-const shot = (page: Page, name: string) => page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: false });
+// Step screenshots are off by default; set E2E_SCREENSHOTS=1 to capture them for review.
+const SCREENSHOTS = process.env.E2E_SCREENSHOTS === '1';
+const shot = async (page: Page, name: string) => {
+  if (SCREENSHOTS) await page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: false });
+};
 
 test.beforeAll(async () => {
-  mkdirSync(SHOTS, { recursive: true });
+  if (SCREENSHOTS) mkdirSync(SHOTS, { recursive: true });
   // Copy the build and grant site access up front: the permission prompt cannot be clicked in a test.
   const ext = join(tmpdir(), 'thread-io-e2e-ext');
   rmSync(ext, { recursive: true, force: true });
@@ -224,4 +228,57 @@ test('research GPS loop: route, capture, gap filling, map, brief, hibernate', as
   await panel.getByRole('button', { name: 'Restore tabs' }).click();
   await expect.poll(open, { timeout: 15_000 }).toBe(before6);
   await expect(panel.getByRole('button', { name: 'Hibernate' })).toBeVisible();
+});
+
+test('offline tier: in-browser multilingual embeddings and rules-only routes', async () => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extId}/sidepanel.html`);
+  await page.evaluate(async () => {
+    const { settings } = await chrome.storage.local.get('settings');
+    await chrome.storage.local.set({
+      settings: { ...(settings as object), llmProvider: 'none', embedProvider: 'browser' },
+    });
+  });
+  const status = await page.evaluate(() =>
+    chrome.runtime.sendMessage({ target: 'background', type: 'ai.status', fresh: true }),
+  );
+  expect(status.value.llm).toBeNull();
+  expect(status.value.embed.kind).toBe('browser');
+
+  // The offscreen document runs multilingual-e5-small on WebAssembly inside the extension.
+  const t0 = Date.now();
+  const res = await page.evaluate(() =>
+    chrome.runtime.sendMessage({
+      target: 'offscreen',
+      type: 'embed',
+      texts: [
+        'query: मुंबई की नालियाँ बारिश में क्यों भर जाती हैं?',
+        'passage: The British-era drains in Mumbai were designed to carry 25 mm of rain per hour.',
+        'passage: Best budget smartphones of 2026 compared.',
+      ],
+    }),
+  );
+  console.log(`in-browser embedding: ${Date.now() - t0} ms (includes model load)`);
+  expect(res.ok).toBe(true);
+  const [q, drains, phones] = res.value as number[][];
+  expect(q.length).toBe(384);
+  const cos = (a: number[], b: number[]) => a.reduce((s, x, i) => s + x * b[i], 0);
+  console.log('hindi question vs drains', cos(q, drains).toFixed(3), 'vs phones', cos(q, phones).toFixed(3));
+  expect(cos(q, drains)).toBeGreaterThan(cos(q, phones));
+
+  // Without a language model the route comes from templates, in the goal's language.
+  await page.getByRole('combobox', { name: 'Workspace' }).selectOption('__new');
+  await page.locator('#goal').fill('मुंबई में हर मानसून में बाढ़ क्यों आती है?');
+  await page.getByRole('button', { name: 'Draft my route' }).click();
+  await expect(page.getByText('Drafted offline')).toBeVisible();
+  const first = await page.locator('.draft-q textarea').first().inputValue();
+  expect(first).toMatch(/[ऀ-ॿ]/);
+  await shot(page, '10-offline-hindi-route');
+
+  await page.evaluate(async () => {
+    const { settings } = await chrome.storage.local.get('settings');
+    await chrome.storage.local.set({
+      settings: { ...(settings as object), llmProvider: 'auto', embedProvider: 'auto' },
+    });
+  });
 });

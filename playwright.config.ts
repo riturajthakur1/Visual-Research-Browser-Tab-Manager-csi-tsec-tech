@@ -6,5 +6,6 @@ export default defineConfig({
   expect: { timeout: 30_000 },
   workers: 1,
   reporter: [['list']],
-  use: { trace: 'retain-on-failure' },
+  // Traces record the whole flow, so they are opt-in: E2E_TRACE=1 npm run test:e2e
+  use: { trace: process.env.E2E_TRACE === '1' ? 'retain-on-failure' : 'off' },
 });

@@ -78,7 +78,7 @@ npm run test:e2e     # builds, then drives the real extension in Chromium
 npm run format
 ```
 
-The end-to-end test loads `dist/` into Chromium and runs the whole loop on an offline copy of the web: draft a route, browse search results, open linked pages, fill a gap, check the map and outline, write the brief, then hibernate and restore. Screenshots land in `test-results/screens/`.
+The end-to-end test loads `dist/` into Chromium and runs the whole loop on an offline copy of the web: draft a route, browse search results, open linked pages, fill a gap, check the map and outline, write the brief, then hibernate and restore. It captures no screenshots or traces unless you opt in with `E2E_SCREENSHOTS=1` or `E2E_TRACE=1`.
 
 ## Project layout
 
