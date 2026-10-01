@@ -4,11 +4,15 @@ import { PAGE_TYPE_LABEL } from '../../core/page-type';
 import { sendToBackground } from '../../core/messages';
 import type { Question, TrailNode } from '../../core/types';
 import { Favicon } from './common';
+import { useTeam } from '../team-context';
+import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 
 /** One page inside a question (or the parking lot), with "why is this here?" and quick fixes. */
 export function PageRow({ node, questions, compact }: { node: TrailNode; questions: Question[]; compact?: boolean }) {
   const [moving, setMoving] = useState(false);
+  const team = useTeam();
+  const byTeammate = team.shared && node.foundBy && node.foundBy.id !== team.meId ? node.foundBy : undefined;
   const a = node.attach;
   const suggested = a?.state === 'suggested' && !!a.questionId;
   const firm = a && (a.method === 'user' || a.method === 'prepared');
@@ -27,6 +31,7 @@ export function PageRow({ node, questions, compact }: { node: TrailNode; questio
         >
           {node.title}
         </button>
+        {byTeammate && <Avatar member={byTeammate} size={16} title={`Found by ${byTeammate.name}`} />}
         {node.highlights.length > 0 && (
           <span className="badge" title={`${node.highlights.length} highlight${node.highlights.length > 1 ? 's' : ''}`}>
             <Icon name="highlight" size={12} />

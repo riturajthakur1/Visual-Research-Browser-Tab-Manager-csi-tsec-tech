@@ -17,6 +17,7 @@ import {
   onTabActivated,
   onTabRemoved,
 } from './capture';
+import { startCollab } from './collab';
 import { enqueue } from './queue';
 import { fillGap, hibernate, openMap, openNode, openUrl, restore, sideBySide } from './tabs';
 import { getTab, setTab } from './tab-state';
@@ -46,6 +47,9 @@ onSettingsChanged(() => {
   resetEmbedSpace();
   void setBadge();
 });
+
+// Live team research: one encrypted session per shared workspace.
+startCollab();
 
 // --- Trail capture ---------------------------------------------------------------
 

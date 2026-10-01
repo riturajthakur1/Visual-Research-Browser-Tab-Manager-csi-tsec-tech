@@ -9,6 +9,7 @@ import { GoalSetup } from './GoalSetup';
 import { Header } from './Header';
 import { RouteView } from './RouteView';
 import { SettingsView } from './SettingsView';
+import { TeamContext } from '../team-context';
 
 export type View =
   { name: 'main' } | { name: 'settings' } | { name: 'brief' } | { name: 'edit-route' } | { name: 'new' };
@@ -70,9 +71,11 @@ export function App() {
   else body = <RouteView data={data} onView={setView} />;
 
   return (
-    <div className="panel">
-      <Header settings={settings} ws={ws} onView={setView} onActivate={(id) => void activate(id)} />
-      <main className="panel-body">{body}</main>
-    </div>
+    <TeamContext.Provider value={{ shared: !!ws?.collab, meId: settings.profile.id }}>
+      <div className="panel">
+        <Header settings={settings} ws={ws} onView={setView} onActivate={(id) => void activate(id)} />
+        <main className="panel-body">{body}</main>
+      </div>
+    </TeamContext.Provider>
   );
 }

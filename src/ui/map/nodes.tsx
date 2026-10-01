@@ -2,7 +2,9 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import { STATUS_LABEL } from '../../core/engine/coverage';
 import { SIZE } from '../../core/layout';
 import { PAGE_TYPE_LABEL } from '../../core/page-type';
+import { Avatar } from '../components/Avatar';
 import { Favicon } from '../components/common';
+import { useTeam } from '../team-context';
 import { Icon } from '../components/Icon';
 import type { GoalData, NoteData, PageData, ParkingData, QuestionData, SearchData } from './graph';
 
@@ -50,6 +52,7 @@ export function QuestionNode({ data, selected }: NodeProps<Node<QuestionData>>) 
           {coverage?.stale && ' · stale'}
         </span>
         <span className="spacer" />
+        {q.claimedBy && <Avatar member={q.claimedBy} size={18} title={`${q.claimedBy.name} is on it`} />}
         <span className="hint">{coverage?.sources.length ?? 0} src</span>
       </div>
       <p className="clamp-3" dir="auto">
@@ -61,6 +64,8 @@ export function QuestionNode({ data, selected }: NodeProps<Node<QuestionData>>) 
 
 export function PageNode({ data, selected }: NodeProps<Node<PageData>>) {
   const { node, status } = data;
+  const team = useTeam();
+  const byTeammate = team.shared && node.foundBy && node.foundBy.id !== team.meId ? node.foundBy : undefined;
   const suggested = node.attach?.state === 'suggested' && !!node.attach.questionId;
   return (
     <div
@@ -73,6 +78,7 @@ export function PageNode({ data, selected }: NodeProps<Node<PageData>>) {
         <Favicon node={node} size={14} />
         <span className="n-site truncate">{node.site}</span>
         <span className="spacer" />
+        {byTeammate && <Avatar member={byTeammate} size={16} title={`Found by ${byTeammate.name}`} />}
         {node.highlights.length > 0 && (
           <span className="badge">
             <Icon name="highlight" size={11} />

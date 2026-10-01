@@ -3,7 +3,9 @@
 // suggested again for that page, edited questions are never overwritten.
 import { db, logEvent, newWorkspace } from './db';
 import type { DraftQuestion } from './engine/route';
-import type { Highlight, ID, Link, LinkType, Question, TrailNode, Workspace } from './types';
+import { newKey } from './collab/crypto';
+import { encodeInvite, type Invite } from './collab/invite';
+import type { Highlight, ID, Link, LinkType, Member, Question, TrailNode, Workspace } from './types';
 import { now, siteOf, textFragmentUrl, uid } from './util';
 
 export async function createWorkspace(name: string, goal = ''): Promise<Workspace> {
@@ -180,6 +182,7 @@ export async function acceptAttachment(nodeId: ID) {
       reason: n.attach.reason.replace(/^Answers/, 'Confirmed: answers'),
       at: now(),
     },
+    updatedAt: now(),
   });
 }
 
@@ -195,7 +198,7 @@ export async function rejectAttachment(nodeId: ID) {
     questionId: n.attach.questionId,
     createdAt: now(),
   });
-  await db.nodes.update(nodeId, { attach: undefined, prov: { ...n.prov, questionTag: undefined } });
+  await db.nodes.update(nodeId, { attach: undefined, prov: { ...n.prov, questionTag: undefined }, updatedAt: now() });
   await logEvent({
     wsId: n.wsId,
     type: 'node.attach',
@@ -312,3 +315,48 @@ export async function dismissProposedQuestion(wsId: ID, signature: string) {
 
 /** Number of independent sites, for display. */
 export const countSites = (nodes: TrailNode[]) => new Set(nodes.map((n) => n.site || siteOf(n.url))).size;
+
+// --- Live team research ---------------------------------------------------------
+
+/** Starts sharing a workspace live. Returns the invite code teammates paste to join. */
+export async function shareWorkspace(wsId: ID, server: string): Promise<string> {
+  const ws = await db.workspaces.get(wsId);
+  if (!ws) throw new Error('Research not found');
+  const collab = ws.collab ?? {
+    server: server.trim(),
+    room: ws.id,
+    key: newKey(),
+    role: 'owner' as const,
+    since: now(),
+  };
+  await db.workspaces.update(wsId, { collab });
+  return encodeInvite({ server: collab.server, room: collab.room, key: collab.key, name: ws.name });
+}
+
+export function inviteFor(ws: Workspace): string | undefined {
+  const c = ws.collab;
+  return c ? encodeInvite({ server: c.server, room: c.room, key: c.key, name: ws.name }) : undefined;
+}
+
+/** Joins a teammate's research. The shared copy fills in once the relay answers. */
+export async function joinWorkspace(invite: Invite): Promise<ID> {
+  const collab = { server: invite.server, room: invite.room, key: invite.key, role: 'member' as const, since: now() };
+  const existing = await db.workspaces.get(invite.room);
+  if (existing) {
+    await db.workspaces.update(existing.id, { collab });
+    return existing.id;
+  }
+  // updatedAt 0: everything the team already has wins over this placeholder.
+  await db.workspaces.add({ ...newWorkspace(invite.name || 'Shared research'), id: invite.room, updatedAt: 0, collab });
+  return invite.room;
+}
+
+/** Stops sharing on this machine; the local copy stays. */
+export async function leaveWorkspace(wsId: ID) {
+  await db.workspaces.update(wsId, { collab: undefined });
+  await db.sync.delete(wsId);
+}
+
+export async function claimQuestion(qid: ID, member: Member | null) {
+  await db.questions.update(qid, { claimedBy: member, updatedAt: now() });
+}

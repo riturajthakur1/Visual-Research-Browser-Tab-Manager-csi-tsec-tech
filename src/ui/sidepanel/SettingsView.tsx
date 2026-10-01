@@ -3,7 +3,7 @@ import { updateWorkspace } from '../../core/actions';
 import { builtinAvailability, downloadBuiltin, type BuiltinAvailability } from '../../core/ai/builtin';
 import { deleteWorkspace } from '../../core/db';
 import { DEFAULT_BLOCKLIST } from '../../core/privacy';
-import { updateSettings } from '../../core/settings';
+import { ensureProfile, MEMBER_COLORS, updateSettings } from '../../core/settings';
 import type { AiMode, EmbedProviderId, LlmProviderId, SearchEngineId, Workspace } from '../../core/types';
 import { Icon } from '../components/Icon';
 import { Switch } from '../components/common';
@@ -42,6 +42,10 @@ export function SettingsView({ ws, onBack }: { ws?: Workspace; onBack: () => voi
   const [builtin, setBuiltin] = useState<BuiltinAvailability>('unavailable');
   const [download, setDownload] = useState<number | null>(null);
   const [name, setName] = useState(ws?.name ?? '');
+  const [profileName, setProfileName] = useState(s.profile.name);
+  const [relay, setRelay] = useState(s.collabServer);
+  useEffect(() => setProfileName(s.profile.name), [s.profile.name]);
+  useEffect(() => setRelay(s.collabServer), [s.collabServer]);
   const [shortcuts, setShortcuts] = useState<chrome.commands.Command[]>([]);
 
   useEffect(() => setUrl(s.bionicUrl), [s.bionicUrl]);
@@ -274,6 +278,53 @@ export function SettingsView({ ws, onBack }: { ws?: Workspace; onBack: () => voi
           </button>
         </fieldset>
       )}
+
+      <fieldset className="card group">
+        <legend>Team</legend>
+        <label className="label" htmlFor="profile-name">
+          Your name, as teammates see it
+        </label>
+        <input
+          id="profile-name"
+          className="input"
+          dir="auto"
+          value={profileName}
+          onChange={(e) => setProfileName(e.target.value)}
+          onBlur={async () => {
+            const p = await ensureProfile();
+            if (profileName.trim() !== p.name) await updateSettings({ profile: { ...p, name: profileName.trim() } });
+          }}
+        />
+        <span className="label">Colour</span>
+        <div className="row swatches" role="radiogroup" aria-label="Avatar colour">
+          {MEMBER_COLORS.map((c) => (
+            <button
+              key={c}
+              role="radio"
+              aria-checked={s.profile.color === c}
+              aria-label={c}
+              className="swatch"
+              style={{ background: c }}
+              onClick={async () => {
+                const p = await ensureProfile();
+                await updateSettings({ profile: { ...p, color: c } });
+              }}
+            />
+          ))}
+        </div>
+        <label className="label" htmlFor="relay">
+          Default relay for shared research
+        </label>
+        <div className="row">
+          <input id="relay" className="input mono" value={relay} onChange={(e) => setRelay(e.target.value)} />
+          <button className="btn" onClick={() => void save({ collabServer: relay.trim() || 'ws://localhost:4545' })}>
+            Save
+          </button>
+        </div>
+        <p className="hint">
+          Start one with <code>npm run collab:server</code>. Teammates on the same Wi-Fi use the LAN address it prints.
+        </p>
+      </fieldset>
 
       <fieldset className="card group">
         <legend>Capture &amp; privacy</legend>

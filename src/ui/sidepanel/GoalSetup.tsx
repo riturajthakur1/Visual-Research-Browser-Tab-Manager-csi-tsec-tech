@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { createWorkspace, saveRoute, setGoal, updateWorkspace } from '../../core/actions';
+import { createWorkspace, joinWorkspace, saveRoute, setGoal, updateWorkspace } from '../../core/actions';
+import { decodeInvite } from '../../core/collab/invite';
+import { ensureProfile, updateSettings } from '../../core/settings';
 import { llmJson } from '../../core/ai/llm';
 import { classifyGoal, draftRoute, type DraftQuestion, type GoalType } from '../../core/engine/route';
 import { detectLanguage } from '../../core/lang';
@@ -193,6 +195,7 @@ export function GoalSetup({
               </button>
             </div>
           )}
+          {!ws && <JoinTeam onJoined={onDone} />}
         </>
       )}
 
@@ -316,5 +319,68 @@ export function GoalSetup({
         </button>
       )}
     </section>
+  );
+}
+
+/** Paste a teammate's invite code to work on their route live. */
+function JoinTeam({ onJoined }: { onJoined: (wsId: ID) => void }) {
+  const [code, setCode] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [needsName, setNeedsName] = useState(false);
+
+  const join = async () => {
+    const invite = decodeInvite(code);
+    if (!invite) {
+      setError('That doesn’t look like a Thread.io invite code.');
+      return;
+    }
+    const profile = await ensureProfile();
+    if (!profile.name.trim()) {
+      if (!name.trim()) {
+        setNeedsName(true);
+        return;
+      }
+      await updateSettings({ profile: { ...profile, name: name.trim() } });
+    }
+    const id = await joinWorkspace(invite);
+    await sendToBackground({ type: 'workspace.activate', wsId: id });
+    onJoined(id);
+  };
+
+  return (
+    <div className="join card">
+      <strong>Joining a teammate?</strong>
+      <p className="muted">Paste the invite code they copied from their Team card.</p>
+      <div className="row">
+        <input
+          className="input mono"
+          placeholder="thread-io:…"
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value);
+            setError('');
+          }}
+          aria-label="Invite code"
+        />
+        <button className="btn" disabled={!code.trim()} onClick={() => void join()}>
+          Join
+        </button>
+      </div>
+      {needsName && (
+        <>
+          <label className="label" htmlFor="join-name">
+            Your name, as teammates see it
+          </label>
+          <div className="row">
+            <input id="join-name" className="input" dir="auto" value={name} onChange={(e) => setName(e.target.value)} />
+            <button className="btn brand" disabled={!name.trim()} onClick={() => void join()}>
+              Join
+            </button>
+          </div>
+        </>
+      )}
+      {error && <p className="error">{error}</p>}
+    </div>
   );
 }

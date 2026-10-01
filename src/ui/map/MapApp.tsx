@@ -27,6 +27,7 @@ import { Icon } from '../components/Icon';
 import { PageRow } from '../components/PageRow';
 import { StatusPill } from '../components/common';
 import { download, slug, useSettings, useWorkspace } from '../hooks';
+import { TeamContext } from '../team-context';
 import { Drawer } from './Drawer';
 import { FloatingEdge } from './FloatingEdge';
 import { buildGraph, type PageData, type QuestionData } from './graph';
@@ -175,7 +176,7 @@ function MapScreen() {
   const onNodeDragStop = (_: unknown, n: Node) => {
     if (replay) return;
     const pos = { x: Math.round(n.position.x), y: Math.round(n.position.y) };
-    if (n.type === 'question') void db.questions.update(n.id, { pos });
+    if (n.type === 'question') void db.questions.update(n.id, { pos, updatedAt: Date.now() });
     else if (n.type === 'page' || n.type === 'search' || n.type === 'note')
       void updateNode(n.id, { pos, pinned: true });
   };
@@ -233,181 +234,184 @@ function MapScreen() {
   }
 
   return (
-    <div className="map-shell">
-      <header className="map-toolbar">
-        <img src="icons/icon32.png" width={22} height={22} alt="" className="logo" />
-        <div className="map-title">
-          <strong dir="auto" className="truncate">
-            {ws.goal || ws.name}
-          </strong>
-          <span className="hint">
-            {allQuestions.length} questions · {allNodes.filter((n) => n.kind === 'page').length} pages
-          </span>
-        </div>
-        <div className="search-box">
-          <Icon name="search" size={14} />
-          <input
-            ref={searchRef}
-            dir="auto"
-            placeholder="Search pages, notes, highlights… (Ctrl+K)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && results[0]) {
-                focusNode(results[0].id);
-                setQuery('');
-              }
-            }}
-          />
-          {results.length > 0 && (
-            <ul className="search-results card">
-              {results.map((r) => (
-                <li key={r.id}>
-                  <button
-                    onClick={() => {
-                      setView('map');
-                      setTimeout(() => focusNode(r.id), 30);
-                      setQuery('');
-                    }}
-                  >
-                    <span className="chip tiny">{r.kind}</span>
-                    <span className="truncate" dir="auto">
-                      {r.title as string}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="segmented small">
-          <button className={view === 'map' ? 'on' : ''} onClick={() => setView('map')}>
-            Map
-          </button>
-          <button className={view === 'outline' ? 'on' : ''} onClick={() => setView('outline')}>
-            Outline
-          </button>
-        </div>
-        <button
-          className={`btn small ${replay ? 'primary' : ''}`}
-          onClick={() => setReplay(replay ? null : { t: t0, playing: true })}
-          title="Replay the session"
-        >
-          <Icon name="history" size={14} /> Replay
-        </button>
-        <details className="menu">
-          <summary className="btn small">
-            <Icon name="download" size={14} /> Export
-          </summary>
-          <div className="menu-list card">
-            <button
-              onClick={() =>
-                download(
-                  `${slug(ws.goal || ws.name)}.canvas`,
-                  JSON.stringify(toJsonCanvas(ws, allQuestions, allNodes, data.links ?? []), null, 2),
-                  'application/json',
-                )
-              }
-            >
-              <Icon name="layers" size={14} /> JSON Canvas (Obsidian)
-            </button>
-            <button onClick={() => void exportPng()}>
-              <Icon name="file" size={14} /> Image (PNG)
-            </button>
+    <TeamContext.Provider value={{ shared: !!ws.collab, meId: settings.profile.id }}>
+      <div className="map-shell">
+        <header className="map-toolbar">
+          <img src="icons/icon32.png" width={22} height={22} alt="" className="logo" />
+          <div className="map-title">
+            <strong dir="auto" className="truncate">
+              {ws.goal || ws.name}
+            </strong>
+            <span className="hint">
+              {allQuestions.length} questions · {allNodes.filter((n) => n.kind === 'page').length} pages
+            </span>
           </div>
-        </details>
-      </header>
-
-      {view === 'map' ? (
-        <div className="map-canvas">
-          <ReactFlow
-            nodes={nodes}
-            edges={graph.edges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            onNodeClick={onNodeClick}
-            onPaneClick={() => setSelection(null)}
-            onNodeDragStop={onNodeDragStop}
-            onMoveEnd={onMoveEnd}
-            onPaneContextMenu={async (e) => {
-              e.preventDefault();
-              const text = prompt('New note');
-              if (text?.trim())
-                await addNote(ws.id, text.trim(), flow.screenToFlowPosition({ x: e.clientX, y: e.clientY }));
-            }}
-            minZoom={0.1}
-            maxZoom={2.5}
-            nodesConnectable={false}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Background gap={28} size={1.2} />
-            <Controls showInteractive={false} />
-            <MiniMap
-              pannable
-              zoomable
-              maskColor="color-mix(in srgb, var(--bg) 70%, transparent)"
-              bgColor="var(--surface)"
-              nodeColor={(n) => {
-                if (n.type === 'question') return STATUS_COLOR[(n.data as QuestionData).coverage?.status ?? 'gap'];
-                if (n.type === 'page') {
-                  const s = (n.data as PageData).status;
-                  return s ? STATUS_COLOR[s] : '#9b8f86';
+          <div className="search-box">
+            <Icon name="search" size={14} />
+            <input
+              ref={searchRef}
+              dir="auto"
+              placeholder="Search pages, notes, highlights… (Ctrl+K)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && results[0]) {
+                  focusNode(results[0].id);
+                  setQuery('');
                 }
-                return 'transparent';
               }}
             />
-          </ReactFlow>
-          <div className="map-toggles card">
-            <label className="row">
-              <input type="checkbox" checked={showTrail} onChange={(e) => setShowTrail(e.target.checked)} /> Trail links
-            </label>
-            <label className="row">
-              <input type="checkbox" checked={showSearches} onChange={(e) => setShowSearches(e.target.checked)} />{' '}
-              Searches
-            </label>
-            <span className="hint">Right-click the canvas to add a note</span>
+            {results.length > 0 && (
+              <ul className="search-results card">
+                {results.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      onClick={() => {
+                        setView('map');
+                        setTimeout(() => focusNode(r.id), 30);
+                        setQuery('');
+                      }}
+                    >
+                      <span className="chip tiny">{r.kind}</span>
+                      <span className="truncate" dir="auto">
+                        {r.title as string}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          {replay && (
-            <div className="replay card">
+          <div className="segmented small">
+            <button className={view === 'map' ? 'on' : ''} onClick={() => setView('map')}>
+              Map
+            </button>
+            <button className={view === 'outline' ? 'on' : ''} onClick={() => setView('outline')}>
+              Outline
+            </button>
+          </div>
+          <button
+            className={`btn small ${replay ? 'primary' : ''}`}
+            onClick={() => setReplay(replay ? null : { t: t0, playing: true })}
+            title="Replay the session"
+          >
+            <Icon name="history" size={14} /> Replay
+          </button>
+          <details className="menu">
+            <summary className="btn small">
+              <Icon name="download" size={14} /> Export
+            </summary>
+            <div className="menu-list card">
               <button
-                className="btn small icon"
-                aria-label={replay.playing ? 'Pause' : 'Play'}
-                onClick={() => setReplay({ t: replay.t >= t1 ? t0 : replay.t, playing: !replay.playing })}
+                onClick={() =>
+                  download(
+                    `${slug(ws.goal || ws.name)}.canvas`,
+                    JSON.stringify(toJsonCanvas(ws, allQuestions, allNodes, data.links ?? []), null, 2),
+                    'application/json',
+                  )
+                }
               >
-                <Icon name={replay.playing ? 'pause' : 'play'} size={14} />
+                <Icon name="layers" size={14} /> JSON Canvas (Obsidian)
               </button>
-              <input
-                type="range"
-                min={t0}
-                max={t1}
-                value={replay.t}
-                onChange={(e) => setReplay({ t: Number(e.target.value), playing: false })}
-                aria-label="Session time"
-              />
-              <span className="hint replay-time">
-                {new Date(replay.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-              <button className="btn small ghost" onClick={() => setReplay(null)}>
-                Done
+              <button onClick={() => void exportPng()}>
+                <Icon name="file" size={14} /> Image (PNG)
               </button>
             </div>
-          )}
-        </div>
-      ) : (
-        <Outline questions={allQuestions} nodes={allNodes} coverage={coverage} />
-      )}
+          </details>
+        </header>
 
-      {selected && view === 'map' && !replay && (
-        <Drawer
-          selected={selected}
-          questions={allQuestions}
-          nodes={allNodes}
-          coverage={coverage}
-          onClose={() => setSelection(null)}
-          onFocus={focusNode}
-        />
-      )}
-    </div>
+        {view === 'map' ? (
+          <div className="map-canvas">
+            <ReactFlow
+              nodes={nodes}
+              edges={graph.edges}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              onNodeClick={onNodeClick}
+              onPaneClick={() => setSelection(null)}
+              onNodeDragStop={onNodeDragStop}
+              onMoveEnd={onMoveEnd}
+              onPaneContextMenu={async (e) => {
+                e.preventDefault();
+                const text = prompt('New note');
+                if (text?.trim())
+                  await addNote(ws.id, text.trim(), flow.screenToFlowPosition({ x: e.clientX, y: e.clientY }));
+              }}
+              minZoom={0.1}
+              maxZoom={2.5}
+              nodesConnectable={false}
+              proOptions={{ hideAttribution: true }}
+            >
+              <Background gap={28} size={1.2} />
+              <Controls showInteractive={false} />
+              <MiniMap
+                pannable
+                zoomable
+                maskColor="color-mix(in srgb, var(--bg) 70%, transparent)"
+                bgColor="var(--surface)"
+                nodeColor={(n) => {
+                  if (n.type === 'question') return STATUS_COLOR[(n.data as QuestionData).coverage?.status ?? 'gap'];
+                  if (n.type === 'page') {
+                    const s = (n.data as PageData).status;
+                    return s ? STATUS_COLOR[s] : '#9b8f86';
+                  }
+                  return 'transparent';
+                }}
+              />
+            </ReactFlow>
+            <div className="map-toggles card">
+              <label className="row">
+                <input type="checkbox" checked={showTrail} onChange={(e) => setShowTrail(e.target.checked)} /> Trail
+                links
+              </label>
+              <label className="row">
+                <input type="checkbox" checked={showSearches} onChange={(e) => setShowSearches(e.target.checked)} />{' '}
+                Searches
+              </label>
+              <span className="hint">Right-click the canvas to add a note</span>
+            </div>
+            {replay && (
+              <div className="replay card">
+                <button
+                  className="btn small icon"
+                  aria-label={replay.playing ? 'Pause' : 'Play'}
+                  onClick={() => setReplay({ t: replay.t >= t1 ? t0 : replay.t, playing: !replay.playing })}
+                >
+                  <Icon name={replay.playing ? 'pause' : 'play'} size={14} />
+                </button>
+                <input
+                  type="range"
+                  min={t0}
+                  max={t1}
+                  value={replay.t}
+                  onChange={(e) => setReplay({ t: Number(e.target.value), playing: false })}
+                  aria-label="Session time"
+                />
+                <span className="hint replay-time">
+                  {new Date(replay.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <button className="btn small ghost" onClick={() => setReplay(null)}>
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Outline questions={allQuestions} nodes={allNodes} coverage={coverage} />
+        )}
+
+        {selected && view === 'map' && !replay && (
+          <Drawer
+            selected={selected}
+            questions={allQuestions}
+            nodes={allNodes}
+            coverage={coverage}
+            onClose={() => setSelection(null)}
+            onFocus={focusNode}
+          />
+        )}
+      </div>
+    </TeamContext.Provider>
   );
 }
 

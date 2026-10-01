@@ -5,6 +5,7 @@ import { coverageMap, type QuestionCoverage } from '../core/engine/coverage';
 import { workspaceLanguage } from '../core/engine/pipeline';
 import { sendToBackground, type AiStatus } from '../core/messages';
 import { DEFAULT_SETTINGS, getSettings, onSettingsChanged } from '../core/settings';
+import type { SessionStatus } from '../core/collab/session';
 import type { GlobalSettings, ID } from '../core/types';
 
 export function useSettings(): GlobalSettings & { loaded: boolean } {
@@ -52,6 +53,21 @@ export function useAiStatus(pollMs = 20_000) {
     return () => clearInterval(t);
   }, [pollMs]);
   return { status, checking, refresh };
+}
+
+/** Live-sharing status and who is online, published by the service worker. */
+export function useCollab(wsId: ID | undefined): SessionStatus | undefined {
+  const [all, setAll] = useState<Record<ID, SessionStatus>>({});
+  useEffect(() => {
+    if (!chrome.storage?.session) return;
+    void chrome.storage.session.get('collab').then((r) => setAll((r.collab as Record<ID, SessionStatus>) ?? {}));
+    const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area === 'session' && changes.collab) setAll((changes.collab.newValue as Record<ID, SessionStatus>) ?? {});
+    };
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
+  }, []);
+  return wsId ? all[wsId] : undefined;
 }
 
 export function useHostAccess() {

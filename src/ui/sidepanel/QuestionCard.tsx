@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { removeQuestion, updateQuestion } from '../../core/actions';
+import { claimQuestion, removeQuestion, updateQuestion } from '../../core/actions';
 import { db } from '../../core/db';
 import type { QuestionCoverage } from '../../core/engine/coverage';
 import { sendToBackground } from '../../core/messages';
-import type { Question, TrailNode } from '../../core/types';
+import type { Member, Question, TrailNode } from '../../core/types';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { PageRow } from '../components/PageRow';
 import { StatusPill } from '../components/common';
@@ -15,6 +16,7 @@ export function QuestionCard({
   questions,
   nodesById,
   ranSearches,
+  me,
 }: {
   q: Question;
   index: number;
@@ -22,6 +24,8 @@ export function QuestionCard({
   questions: Question[];
   nodesById: Map<string, TrailNode>;
   ranSearches: Set<string>;
+  /** Set when the research is shared: enables claiming. */
+  me?: Member;
 }) {
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -44,6 +48,7 @@ export function QuestionCard({
     if (!q.conflict) return;
     await db.questions.update(q.id, {
       conflict: { ...q.conflict, verdict: 'agree', explanation: 'You marked this as resolved' },
+      updatedAt: Date.now(),
     });
   };
 
@@ -91,6 +96,35 @@ export function QuestionCard({
             <StatusPill status={coverage.status} stale={coverage.stale} />
             <span className="hint">{coverage.detail}</span>
           </div>
+          {me && (
+            <div className="row claim">
+              {q.claimedBy ? (
+                <>
+                  <Avatar member={q.claimedBy} size={18} />
+                  <span className="hint" dir="auto">
+                    {q.claimedBy.id === me.id ? 'You’re on it' : `${q.claimedBy.name} is on it`}
+                  </span>
+                  {q.claimedBy.id === me.id && (
+                    <button className="btn ghost small" onClick={() => void claimQuestion(q.id, null)}>
+                      Unclaim
+                    </button>
+                  )}
+                </>
+              ) : (
+                coverage.status !== 'covered' && (
+                  <button
+                    className="btn small"
+                    title="Tell teammates you are working on this question"
+                    onClick={() =>
+                      void claimQuestion(q.id, { id: me.id, name: me.name || 'Teammate', color: me.color })
+                    }
+                  >
+                    <Icon name="pin" size={13} /> Claim
+                  </button>
+                )
+              )}
+            </div>
+          )}
         </div>
         <div className="qcard-tools">
           <button

@@ -11,11 +11,12 @@ import { Empty } from '../components/common';
 import { useSettings, type useWorkspace } from '../hooks';
 import type { View } from './App';
 import { QuestionCard } from './QuestionCard';
+import { TeamCard } from './TeamCard';
 
 type Data = ReturnType<typeof useWorkspace>;
 
 export function RouteView({ data, onView }: { data: Data; onView: (v: View) => void }) {
-  const { recording } = useSettings();
+  const { recording, profile } = useSettings();
   const ws = data.ws!;
   const questions = data.questions ?? [];
   const nodes = data.nodes ?? [];
@@ -89,6 +90,7 @@ export function RouteView({ data, onView }: { data: Data; onView: (v: View) => v
         <button className="btn block" onClick={() => onView({ name: 'edit-route' })}>
           <Icon name="target" /> Set a goal now
         </button>
+        <TeamCard ws={ws} />
         <h2 className="section-title">Trail so far · {plural(pages.length, 'page')}</h2>
         {pages.length ? (
           <ul className="page-list">
@@ -167,7 +169,9 @@ export function RouteView({ data, onView }: { data: Data; onView: (v: View) => v
           >
             <Icon name="search" /> <span className="truncate">{nextSearch}</span>
           </button>
-          {!recording && <p className="hint">Recording is paused, so pages you open won’t be filed until you start it.</p>}
+          {!recording && (
+            <p className="hint">Recording is paused, so pages you open won’t be filed until you start it.</p>
+          )}
         </div>
       ) : counts.covered + counts.conflict === questions.length ? (
         <div className="next card done">
@@ -180,6 +184,8 @@ export function RouteView({ data, onView }: { data: Data; onView: (v: View) => v
           </button>
         </div>
       ) : null}
+
+      <TeamCard ws={ws} />
 
       {ws.proposedQuestion && (
         <div className="proposal card">
@@ -227,6 +233,7 @@ export function RouteView({ data, onView }: { data: Data; onView: (v: View) => v
             questions={questions}
             nodesById={nodesById}
             ranSearches={ranSearches}
+            me={ws.collab ? profile : undefined}
           />
         ))}
       </div>

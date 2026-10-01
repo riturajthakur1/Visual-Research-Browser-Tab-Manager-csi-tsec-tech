@@ -46,9 +46,15 @@ export async function activeWorkspaceId(): Promise<ID> {
   return ws.id;
 }
 
-function blankNode(wsId: ID, kind: TrailNode['kind'], url: string, title: string): TrailNode {
+async function finder(): Promise<TrailNode['foundBy']> {
+  const { profile } = await getSettings();
+  return profile?.id ? { ...profile, name: profile.name.trim() || 'Teammate' } : undefined;
+}
+
+async function blankNode(wsId: ID, kind: TrailNode['kind'], url: string, title: string): Promise<TrailNode> {
   const t = now();
   return {
+    foundBy: await finder(),
     id: uid('n_'),
     wsId,
     kind,
@@ -92,7 +98,7 @@ async function upsertSearch(
     await db.nodes.update(existing.id, patch);
     return { ...existing, ...patch };
   }
-  const node = { ...blankNode(wsId, 'search', url, query), query, engine };
+  const node = { ...(await blankNode(wsId, 'search', url, query)), query, engine };
   node.prov.questionTag = questionTag;
   await db.nodes.add(node);
   await logEvent({ wsId, type: 'node.add', nodeId: node.id, data: { kind: 'search', query } });
@@ -121,7 +127,7 @@ async function upsertPage(
     await db.nodes.update(existing.id, patch);
     return { node: { ...existing, ...patch }, created: false };
   }
-  const node = blankNode(wsId, 'page', url, title || hostname(url));
+  const node = await blankNode(wsId, 'page', url, title || hostname(url));
   node.prov = { ...node.prov, ...prov };
   await db.nodes.add(node);
   await logEvent({ wsId, type: 'node.add', nodeId: node.id, data: { kind: 'page' } });

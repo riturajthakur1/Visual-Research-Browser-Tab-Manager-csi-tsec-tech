@@ -9,21 +9,21 @@ export interface Snapshot {
 export function snapshotAt(t: number, questions: Question[], nodes: TrailNode[], events: TrailEvent[]): Snapshot {
   const past = events.filter((e) => e.at <= t).sort((a, b) => a.at - b.at || (a.seq ?? 0) - (b.seq ?? 0));
   const attachAt = new Map<ID, ID | null>();
-  const highlightsAt = new Map<ID, number>();
+  // Pages a teammate captured have no filing history on this machine.
+  const tracked = new Set(events.filter((e) => e.type === 'node.attach' && e.nodeId).map((e) => e.nodeId!));
   for (const e of past) {
     if (e.type === 'node.attach' && e.nodeId) attachAt.set(e.nodeId, e.questionId ?? null);
-    if (e.type === 'highlight.add' && e.nodeId) highlightsAt.set(e.nodeId, (highlightsAt.get(e.nodeId) ?? 0) + 1);
   }
   const qs = questions.filter((q) => q.createdAt <= t);
   const ns = nodes
     .filter((n) => n.createdAt <= t)
     .map((n) => {
       // Before its first attach event a page was still being matched: show it parked.
-      const qid = attachAt.get(n.id) ?? null;
+      const qid = tracked.has(n.id) ? (attachAt.get(n.id) ?? null) : (n.attach?.questionId ?? null);
       return {
         ...n,
         attach: n.attach ? { ...n.attach, questionId: qid } : undefined,
-        highlights: n.highlights.slice(0, highlightsAt.get(n.id) ?? 0),
+        highlights: n.highlights.filter((h) => h.at <= t),
       } as TrailNode;
     });
   return { questions: qs, nodes: ns };

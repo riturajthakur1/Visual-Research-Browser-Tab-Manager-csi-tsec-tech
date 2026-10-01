@@ -2,7 +2,8 @@ import { sendToBackground } from '../../core/messages';
 import type { GlobalSettings, ID, Workspace } from '../../core/types';
 import { Icon } from '../components/Icon';
 import { Switch } from '../components/common';
-import { requestHostAccess, useAiStatus, useHostAccess, useWorkspaces } from '../hooks';
+import { AvatarStack } from '../components/Avatar';
+import { requestHostAccess, useAiStatus, useCollab, useHostAccess, useWorkspaces } from '../hooks';
 import type { View } from './App';
 
 export function Header({
@@ -19,6 +20,7 @@ export function Header({
   const workspaces = useWorkspaces();
   const access = useHostAccess();
   const { status } = useAiStatus();
+  const team = useCollab(ws?.collab ? ws.id : undefined);
 
   const toggleRecording = async (on: boolean) => {
     // Site access is requested in the same click: browsers require a user gesture.
@@ -37,6 +39,11 @@ export function Header({
         <img src="icons/icon32.png" width={22} height={22} alt="" className="logo" />
         <strong className="brand-name">Thread.io</strong>
         <div className="spacer" />
+        {ws?.collab && team?.state === 'live' && team.peers.length > 0 && (
+          <span title={`Online: ${team.peers.map((p) => p.name).join(', ')}`}>
+            <AvatarStack members={team.peers} size={20} max={3} />
+          </span>
+        )}
         <button className="ai-chip" title={aiTitle} onClick={() => onView({ name: 'settings' })}>
           <span className={`dot ${status?.llm ? 'covered' : status ? 'thin' : 'neutral'}`} />
           <span className="truncate">{aiLabel}</span>
