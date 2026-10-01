@@ -1,0 +1,32 @@
+{
+  "goal": { "en": "Why does Mumbai flood every monsoon, and what would fix it?", "hi": "मुंबई में हर मानसून में बाढ़ क्यों आती है, और इसे कैसे ठीक किया जा सकता है?" },
+  "questions": {
+    "en": [
+      "What causes Mumbai to flood during the monsoon?",
+      "How does Mumbai's drainage and stormwater system work, and why does it fail?",
+      "What role did mangroves and wetlands play, and how has their loss affected flooding?",
+      "What solutions have been proposed to reduce flooding in Mumbai?",
+      "How has climate change changed monsoon rainfall intensity?",
+      "What happened in the 2005 Mumbai floods?"
+    ],
+    "hi": [
+      "मानसून के दौरान मुंबई में बाढ़ के क्या कारण हैं?",
+      "मुंबई की जल निकासी और स्टॉर्मवॉटर प्रणाली कैसे काम करती है, और यह विफल क्यों होती है?",
+      "मैंग्रोव और आर्द्रभूमि की क्या भूमिका थी, और उनके नष्ट होने से बाढ़ पर क्या असर पड़ा?",
+      "मुंबई में बाढ़ कम करने के लिए कौन से समाधान प्रस्तावित किए गए हैं?",
+      "जलवायु परिवर्तन ने मानसून की बारिश की तीव्रता को कैसे बदला है?",
+      "2005 की मुंबई बाढ़ में क्या हुआ था?"
+    ]
+  },
+  "docs": [
+    { "label": "drainage", "answers": 1, "text": "BRIMSTOWAD: Mumbai's storm water drain project. The British-era drains in Mumbai were designed to carry 25 mm of rain per hour. The Brihanmumbai Storm Water Disposal System project aims to raise capacity to 50 mm per hour, with pumping stations at Haji Ali and Irla." },
+    { "label": "mangrove", "answers": 2, "text": "Mangroves of Mumbai act as a buffer against storm surge and absorb floodwater. Reclamation along the Mithi river and Mahim creek destroyed wetlands, reducing the city's natural ability to hold water." },
+    { "label": "2005", "answers": 5, "text": "On 26 July 2005, Mumbai received 944 mm of rain in 24 hours at Santacruz. Over 1,000 people died across Maharashtra; the Mithi river overflowed and the airport shut." },
+    { "label": "climate", "answers": 4, "text": "A study in Nature Communications finds extreme rainfall events over central India have tripled since 1950, linked to warming of the Arabian Sea." },
+    { "label": "solutions", "answers": 3, "text": "Sponge city ideas for Mumbai: restoring the Mithi river floodplain, rainwater harvesting, permeable pavements and enforcing no-construction zones are proposed by urban planners." },
+    { "label": "drainage-hi", "answers": 1, "text": "मुंबई की ब्रिटिश काल की नालियाँ प्रति घंटे केवल 25 मिमी बारिश का पानी निकालने के लिए बनाई गई थीं। बृहन्मुंबई स्टॉर्म वॉटर ड्रेनेज परियोजना इस क्षमता को 50 मिमी प्रति घंटे तक बढ़ाने का लक्ष्य रखती है।" },
+    { "label": "mangrove-mr", "answers": 2, "text": "मुंबईतील खारफुटी जंगले समुद्राच्या लाटांपासून संरक्षण करतात आणि पुराचे पाणी शोषून घेतात. मिठी नदी आणि माहीम खाडीच्या भरावामुळे पाणथळ जागा नष्ट झाल्या." },
+    { "label": "offtopic", "answers": -1, "text": "Best budget smartphones of 2026: we compare battery life, cameras and displays across ten phones under Rs 20,000." },
+    { "label": "react", "answers": -1, "text": "React Flow is a library for building node-based editors and interactive diagrams. Install it with npm and render a ReactFlow component." }
+  ]
+}

@@ -11,7 +11,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const MODELS = [
   {
-    id: 'Xenova/all-MiniLM-L6-v2',
+    id: 'Xenova/multilingual-e5-small',
     files: [
       'config.json',
       'tokenizer.json',

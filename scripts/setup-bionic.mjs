@@ -17,9 +17,10 @@ const args = Object.fromEntries(
 // if none are present the first entry is downloaded.
 const LLM_PREFERENCE = args.llm
   ? [args.llm]
-  : ['qwen/qwen3-vl-4b', 'qwen/qwen3-4b-2507', 'google/gemma-4-e2b', 'qwen/qwen3-1.7b'];
-const EMBED_KEY = 'text-embedding-nomic-embed-text-v1.5';
-const EMBED_DOWNLOAD = 'nomic-ai/nomic-embed-text-v1.5-GGUF';
+  : ['google/gemma-4-e2b', 'qwen/qwen3-vl-4b', 'qwen/qwen3-4b-2507', 'qwen/qwen3-1.7b'];
+// Multilingual (100+ languages), so a Hindi question can match an English page.
+const EMBED_MATCH = /embeddinggemma/i;
+const EMBED_DOWNLOAD = 'https://huggingface.co/ggml-org/embeddinggemma-300M-GGUF';
 const CONTEXT = String(args.ctx ?? 8192);
 const BASE = args.url ?? 'http://localhost:1234/v1';
 
@@ -74,23 +75,29 @@ if (!llm) {
 }
 console.log(`✓ Chat model: ${llm}`);
 
-if (!keys.some((k) => k.includes('nomic-embed-text-v1.5'))) {
+if (!keys.some((k) => EMBED_MATCH.test(k))) {
   console.log(`↓ Downloading ${EMBED_DOWNLOAD}…`);
   execFileSync(LMS, ['get', EMBED_DOWNLOAD, '--yes'], { stdio: 'inherit' });
   keys = installedKeys();
 }
-const embed = keys.find((k) => k.includes('nomic-embed-text-v1.5')) ?? EMBED_KEY;
+const embed = keys.find((k) => EMBED_MATCH.test(k));
+if (!embed) {
+  console.error('Embedding model download did not complete.');
+  process.exit(1);
+}
 console.log(`✓ Embedding model: ${embed}`);
 
 // Just-in-time loading picks the model's full context window, which spills a
 // 4B model out of a 6 GB GPU and drops it to a few tokens a second. Loading it
 // ourselves with a small context keeps it fast.
-const loaded = JSON.parse(lms('ps', '--json')).map((m) => m.identifier ?? m.modelKey);
-for (const id of loaded) {
-  if (id === llm) {
-    console.log(`  reloading ${id} with a ${CONTEXT}-token context`);
-    lms('unload', id);
-  }
+// Free the GPU: unload other chat models, and reload ours with the small context.
+const running = JSON.parse(lms('ps', '--json'));
+const loaded = running.map((m) => m.identifier ?? m.modelKey);
+for (const m of running) {
+  const id = m.identifier ?? m.modelKey;
+  if (m.type === 'embedding') continue;
+  console.log(id === llm ? `  reloading ${id} with a ${CONTEXT}-token context` : `  unloading ${id} to free GPU memory`);
+  lms('unload', id);
 }
 console.log(`Loading ${llm} (context ${CONTEXT}, GPU max)…`);
 lms('load', llm, '--context-length', CONTEXT, '--gpu', 'max', '--identifier', llm, '--yes');
@@ -103,7 +110,12 @@ const t0 = Date.now();
 const res = await fetch(`${BASE}/chat/completions`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ model: llm, messages: [{ role: 'user', content: 'Reply with the single word: ready' }], max_tokens: 5 }),
+  body: JSON.stringify({
+    model: llm,
+    messages: [{ role: 'user', content: 'Reply with the single word: ready' }],
+    max_tokens: 5,
+    reasoning_effort: 'none',
+  }),
 });
 const body = await res.json();
 console.log(`✓ ${llm} answered "${body.choices?.[0]?.message?.content?.trim()}" in ${Date.now() - t0} ms`);
