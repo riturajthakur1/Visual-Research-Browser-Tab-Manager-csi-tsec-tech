@@ -3,6 +3,8 @@
   display: flex;
   flex-direction: column;
   container-type: inline-size;
+  background: var(--ambient), var(--bg);
+  background-attachment: fixed;
 }
 
 /* --- Header -------------------------------------------------------------------- */
@@ -10,9 +12,12 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
-  backdrop-filter: blur(12px) saturate(1.4);
-  border-bottom: 1px solid var(--border);
+  /* Mostly opaque so cards scrolling underneath stay out of the way. */
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-edge);
+  box-shadow: inset 0 -1px 0 var(--glass-rim);
   padding: 10px 14px 12px;
   display: flex;
   flex-direction: column;
@@ -245,7 +250,6 @@ p {
   justify-content: flex-end;
   gap: 8px;
   padding: 10px 0;
-  background: linear-gradient(transparent, var(--bg) 30%);
 }
 
 /* --- Question numbers --------------------------------------------------------------- */
@@ -350,12 +354,12 @@ p {
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  border-color: color-mix(in srgb, var(--gap) 22%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--gap-bg) 70%, var(--surface)), var(--surface) 70%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gap-bg) 80%, transparent), transparent 75%), var(--glass);
 }
 .next.done {
-  border-color: color-mix(in srgb, var(--covered) 22%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--covered-bg) 70%, var(--surface)), var(--surface) 70%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--covered-bg) 80%, transparent), transparent 75%), var(--glass);
 }
 .next p {
   font-weight: 550;
@@ -369,8 +373,8 @@ p {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-color: color-mix(in srgb, var(--brand) 20%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 60%, var(--surface)), var(--surface) 70%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 75%, transparent), transparent 75%), var(--glass);
 }
 .proposal-text {
   font-weight: 600;
@@ -388,10 +392,12 @@ p {
   gap: 10px;
 }
 .qcard {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-rim);
   border-radius: var(--radius);
-  box-shadow: var(--highlight), var(--shadow-1);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
   scroll-margin-top: 110px;
   transition:
@@ -463,8 +469,8 @@ p {
 .conflict-box {
   padding: 12px;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--conflict) 18%, transparent);
-  background: var(--conflict-bg);
+  border: 1px solid color-mix(in srgb, var(--conflict) 20%, transparent);
+  background: color-mix(in srgb, var(--conflict-bg) 75%, transparent);
   color: var(--ink);
   display: flex;
   flex-direction: column;
@@ -489,20 +495,22 @@ p {
 }
 .page-row {
   padding: 10px 12px 8px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-2) 75%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 14px;
+  background: var(--glass-thin);
+  border: 1px solid var(--glass-rim);
+  box-shadow: 0 0 0 1px var(--glass-edge);
   display: flex;
   flex-direction: column;
   gap: 3px;
   transition: border-color 0.18s var(--ease);
 }
 .page-row:hover {
-  border-color: var(--border);
+  background: var(--glass-strong);
 }
 .page-row.suggested {
   background: transparent;
   border: 1px dashed var(--border-strong);
+  box-shadow: none;
 }
 .page-main {
   gap: 8px;
@@ -591,12 +599,31 @@ p {
 
 .panel-footer {
   position: sticky;
-  bottom: 0;
+  bottom: 8px;
   display: flex;
-  gap: 6px;
-  padding: 14px 0 6px;
-  margin-top: 8px;
-  background: linear-gradient(transparent, var(--bg) 40%);
+  gap: 4px;
+  padding: 5px;
+  margin-top: 14px;
+  border-radius: 22px;
+  z-index: 5;
+  /* Mostly opaque: cards scroll underneath and their text must not show through. */
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-rim);
+  box-shadow: var(--glass-shadow);
+}
+/* Buttons sit flush in the tray, like a toolbar. */
+.panel-footer .btn:not(.brand):not(.primary) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.panel-footer .btn:not(.brand):not(.primary):hover:not(:disabled) {
+  background: var(--glass-thin);
+  box-shadow: 0 0 0 1px var(--glass-edge);
 }
 .panel-footer .btn:not(.icon) {
   flex: 1;
@@ -712,7 +739,8 @@ p {
   gap: 6px;
   align-items: flex-start;
   padding: 8px 10px;
-  background: var(--surface-2);
+  background: var(--glass-thin);
+  box-shadow: 0 0 0 1px var(--glass-edge);
   border-radius: 12px;
   font-size: 12.5px;
 }
@@ -727,8 +755,10 @@ p {
   gap: 2px;
   padding: 3px;
   border-radius: 999px;
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--border);
+  background: var(--glass-thin);
+  box-shadow:
+    inset 0 1px 2px rgb(30 23 20 / 6%),
+    0 0 0 1px var(--glass-edge);
 }
 .segmented button {
   flex: 1;
