@@ -12,7 +12,23 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   searchEngine: 'google',
   blocklist: DEFAULT_BLOCKLIST,
   onboarded: false,
+  profile: { id: '', name: '', color: '' },
+  collabServer: 'ws://localhost:4545',
 };
+
+export const MEMBER_COLORS = ['#C8160C', '#2563EB', '#16A34A', '#9333EA', '#EA580C', '#0891B2', '#DB2777', '#4D7C0F'];
+
+/** The local person's profile, created on first use. */
+export async function ensureProfile(): Promise<GlobalSettings['profile']> {
+  const s = await getSettings();
+  if (s.profile?.id) return s.profile;
+  const id =
+    'm_' + Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, '0')).join('');
+  const color = MEMBER_COLORS[crypto.getRandomValues(new Uint8Array(1))[0] % MEMBER_COLORS.length];
+  const profile = { id, name: s.profile?.name ?? '', color };
+  await updateSettings({ profile });
+  return profile;
+}
 
 const KEY = 'settings';
 const hasChromeStorage = () => typeof chrome !== 'undefined' && !!chrome.storage?.local;

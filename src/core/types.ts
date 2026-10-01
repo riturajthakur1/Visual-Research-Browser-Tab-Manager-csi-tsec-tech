@@ -5,6 +5,26 @@ export type ID = string;
 export type AiMode = 'off' | 'suggest' | 'auto';
 export type WorkspaceMode = 'gps' | 'explore';
 
+/** A person working on a shared research route. */
+export interface Member {
+  id: ID;
+  name: string;
+  /** Avatar colour, a CSS colour string. */
+  color: string;
+}
+
+/** Live sharing for a workspace. The key never leaves this browser except inside invite codes. */
+export interface CollabLink {
+  /** Relay server, e.g. ws://192.168.1.20:4545 */
+  server: string;
+  /** Room on the relay; equals the workspace id on every teammate's machine. */
+  room: string;
+  /** AES-GCM key (base64url) that encrypts every update; the relay only sees ciphertext. */
+  key: string;
+  role: 'owner' | 'member';
+  since: number;
+}
+
 export interface WorkspaceSettings {
   /** How automatic attachment behaves: off = park everything, suggest = attach as dashed suggestion, auto = attach directly. */
   aiMode: AiMode;
@@ -42,6 +62,7 @@ export interface Workspace {
   dismissedProposals?: string[];
   hibernated?: { at: number; tabs: HibernatedTab[] };
   viewport?: { x: number; y: number; zoom: number };
+  collab?: CollabLink;
   createdAt: number;
   updatedAt: number;
 }
@@ -72,6 +93,8 @@ export interface Question {
   conflict?: ConflictCheck;
   /** Position on the map once the user dragged it. */
   pos?: { x: number; y: number };
+  /** Teammate who said they are working on this question. */
+  claimedBy?: Member | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -159,6 +182,8 @@ export interface TrailNode {
   pinned?: boolean;
   prov: Provenance;
   attach?: Attachment;
+  /** Who captured it; shown on shared routes. */
+  foundBy?: Member;
   /** True once summary and embedding have been computed. */
   enriched?: boolean;
   visits: number;
@@ -241,4 +266,8 @@ export interface GlobalSettings {
   searchEngine: SearchEngineId;
   blocklist: string[];
   onboarded: boolean;
+  /** How this person appears to teammates. */
+  profile: Member;
+  /** Default relay for new shared research. */
+  collabServer: string;
 }

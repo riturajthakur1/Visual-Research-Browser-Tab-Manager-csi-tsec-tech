@@ -1,5 +1,15 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Link, Question, Rule, StoredVector, TrailEvent, TrailNode, Workspace, WorkspaceSettings } from './types';
+
+/** Saved state of a live-shared workspace: the shared document and the last agreed version of each record. */
+export interface SyncState {
+  wsId: string;
+  /** Encoded Yjs document, so changes made offline merge on reconnect. */
+  doc: Uint8Array;
+  /** Last synced copy of each record, keyed "table:id"; the base for three-way merges. */
+  base: Record<string, Record<string, unknown>>;
+  at: number;
+}
 import { now, uid } from './util';
 
 export class ThreadDB extends Dexie {
@@ -10,6 +20,7 @@ export class ThreadDB extends Dexie {
   rules!: EntityTable<Rule, 'id'>;
   events!: EntityTable<TrailEvent, 'seq'>;
   vectors!: EntityTable<StoredVector, 'key'>;
+  sync!: EntityTable<SyncState, 'wsId'>;
 
   constructor(name = 'thread-io') {
     super(name);
@@ -22,6 +33,7 @@ export class ThreadDB extends Dexie {
       events: '++seq, wsId, [wsId+at]',
       vectors: 'key, at',
     });
+    this.version(2).stores({ sync: 'wsId' });
   }
 }
 
@@ -66,12 +78,17 @@ export async function workspaceData(wsId: string) {
 }
 
 export async function deleteWorkspace(wsId: string) {
-  await db.transaction('rw', [db.workspaces, db.questions, db.nodes, db.links, db.rules, db.events], async () => {
-    await db.questions.where('wsId').equals(wsId).delete();
-    await db.nodes.where('wsId').equals(wsId).delete();
-    await db.links.where('wsId').equals(wsId).delete();
-    await db.rules.where('wsId').equals(wsId).delete();
-    await db.events.where('[wsId+at]').between([wsId, Dexie.minKey], [wsId, Dexie.maxKey]).delete();
-    await db.workspaces.delete(wsId);
-  });
+  await db.transaction(
+    'rw',
+    [db.workspaces, db.questions, db.nodes, db.links, db.rules, db.events, db.sync],
+    async () => {
+      await db.questions.where('wsId').equals(wsId).delete();
+      await db.nodes.where('wsId').equals(wsId).delete();
+      await db.links.where('wsId').equals(wsId).delete();
+      await db.rules.where('wsId').equals(wsId).delete();
+      await db.events.where('[wsId+at]').between([wsId, Dexie.minKey], [wsId, Dexie.maxKey]).delete();
+      await db.workspaces.delete(wsId);
+      await db.sync.delete(wsId);
+    },
+  );
 }

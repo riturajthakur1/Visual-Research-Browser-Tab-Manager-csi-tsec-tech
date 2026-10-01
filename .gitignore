@@ -9,3 +9,6 @@ playwright-report/
 .vite/
 *.log
 .DS_Store
+
+# local relay data (encrypted room logs)
+collab-server/data/
