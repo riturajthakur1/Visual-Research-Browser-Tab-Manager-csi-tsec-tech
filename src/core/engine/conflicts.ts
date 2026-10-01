@@ -59,7 +59,12 @@ export async function checkConflict(
   const out = await llm<ConflictAnswer>(conflictRequest(q, sources, lang));
   if (!out) return null;
   const picked = (out.sources ?? []).map((n) => sources[n - 1]?.id).filter((id): id is string => !!id);
-  const verdict = out.verdict === 'conflict' && picked.length === 2 ? 'conflict' : out.verdict === 'conflict' ? 'unclear' : out.verdict;
+  const verdict =
+    out.verdict === 'conflict' && picked.length === 2
+      ? 'conflict'
+      : out.verdict === 'conflict'
+        ? 'unclear'
+        : out.verdict;
   return {
     verdict,
     explanation: truncate(out.explanation ?? '', 220),

@@ -12,10 +12,11 @@ describe('isBlocked', () => {
     'file:///C:/secret.txt',
   ])('blocks %s', (url) => expect(isBlocked(url, DEFAULT_BLOCKLIST)).toBe(true));
 
-  it.each(['https://en.wikipedia.org/wiki/Mumbai', 'https://www.thehindu.com/news/cities/mumbai/', 'https://arxiv.org/abs/2401.00001'])(
-    'allows %s',
-    (url) => expect(isBlocked(url, DEFAULT_BLOCKLIST)).toBe(false),
-  );
+  it.each([
+    'https://en.wikipedia.org/wiki/Mumbai',
+    'https://www.thehindu.com/news/cities/mumbai/',
+    'https://arxiv.org/abs/2401.00001',
+  ])('allows %s', (url) => expect(isBlocked(url, DEFAULT_BLOCKLIST)).toBe(false));
 });
 
 describe('sanitizeForModel', () => {

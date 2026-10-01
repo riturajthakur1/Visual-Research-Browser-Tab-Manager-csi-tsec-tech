@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { classifyGoal, cleanDraft, draftRoute, goalTopic, rulesRoute, type GoalType } from '../../src/core/engine/route';
+import {
+  classifyGoal,
+  cleanDraft,
+  draftRoute,
+  goalTopic,
+  rulesRoute,
+  type GoalType,
+} from '../../src/core/engine/route';
 import { detectLanguage } from '../../src/core/lang';
 
 const cases: [string, GoalType][] = [
@@ -51,7 +58,8 @@ describe('rulesRoute', () => {
   });
 
   it('writes Hindi goals in Hindi', () => {
-    for (const q of rulesRoute('मुंबई में हर मानसून में बाढ़ क्यों आती है?')) expect(detectLanguage(q.text).code).toBe('hi');
+    for (const q of rulesRoute('मुंबई में हर मानसून में बाढ़ क्यों आती है?'))
+      expect(detectLanguage(q.text).code).toBe('hi');
   });
 
   it('writes Marathi goals in Marathi', () => {
@@ -114,7 +122,11 @@ describe('draftRoute', () => {
     let system = '';
     const draft = await draftRoute('मुंबई में बाढ़ क्यों आती है?', async (req) => {
       system = req.system;
-      const questions = [1, 2, 3, 4, 5].map((i) => ({ text: `प्रश्न संख्या ${i}`, keyTerms: ['क', 'ख'], searches: ['a', 'b'] }));
+      const questions = [1, 2, 3, 4, 5].map((i) => ({
+        text: `प्रश्न संख्या ${i}`,
+        keyTerms: ['क', 'ख'],
+        searches: ['a', 'b'],
+      }));
       return { questions } as never;
     });
     expect(draft.source).toBe('model');

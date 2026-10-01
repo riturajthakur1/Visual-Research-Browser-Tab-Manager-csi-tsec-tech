@@ -10,7 +10,11 @@ describe('parseSearchUrl', () => {
     ['https://search.brave.com/search?q=sponge+city', 'Brave', 'sponge city'],
     ['https://www.youtube.com/results?search_query=mumbai+rain', 'YouTube', 'mumbai rain'],
     ['https://scholar.google.com/scholar?q=urban+flooding', 'Google Scholar', 'urban flooding'],
-    ['https://www.google.com/search?q=%E0%A4%AE%E0%A5%81%E0%A4%82%E0%A4%AC%E0%A4%88+%E0%A4%AC%E0%A4%BE%E0%A4%A2%E0%A4%BC', 'Google', 'मुंबई बाढ़'],
+    [
+      'https://www.google.com/search?q=%E0%A4%AE%E0%A5%81%E0%A4%82%E0%A4%AC%E0%A4%88+%E0%A4%AC%E0%A4%BE%E0%A4%A2%E0%A4%BC',
+      'Google',
+      'मुंबई बाढ़',
+    ],
   ])('%s', (url, engine, query) => {
     expect(parseSearchUrl(url)).toEqual({ engine, query });
   });

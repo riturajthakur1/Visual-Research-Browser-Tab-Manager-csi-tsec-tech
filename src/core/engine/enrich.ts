@@ -10,7 +10,18 @@ import type { PageType, TrailNode } from '../types';
 import { firstSentences } from '../util';
 
 const PAGE_TYPES: PageType[] = [
-  'docs', 'tutorial', 'paper', 'video', 'qa', 'news', 'reference', 'blog', 'product', 'government', 'data', 'other',
+  'docs',
+  'tutorial',
+  'paper',
+  'video',
+  'qa',
+  'news',
+  'reference',
+  'blog',
+  'product',
+  'government',
+  'data',
+  'other',
 ];
 
 export interface Enrichment {
@@ -23,12 +34,21 @@ export function heuristicEnrichment(node: TrailNode): Enrichment {
   const body = node.text ?? '';
   const summary = node.description?.trim() || (body ? firstSentences(body, 2) : '');
   const terms = keyTerms(`${node.title} ${node.title} ${node.description ?? ''} ${body.slice(0, 5000)}`, 6);
-  return { summary, keyTerms: terms, pageType: node.pageType !== 'other' ? node.pageType : guessPageType(node.url, { title: node.title }) };
+  return {
+    summary,
+    keyTerms: terms,
+    pageType: node.pageType !== 'other' ? node.pageType : guessPageType(node.url, { title: node.title }),
+  };
 }
 
 export function enrichRequest(node: TrailNode, goal: string, lang: LanguageInfo): JsonRequest {
   const content = sanitizeForModel(
-    [`Title: ${node.title}`, `Site: ${node.site ?? ''}`, node.description && `Description: ${node.description}`, (node.text ?? '').slice(0, 2400)]
+    [
+      `Title: ${node.title}`,
+      `Site: ${node.site ?? ''}`,
+      node.description && `Description: ${node.description}`,
+      (node.text ?? '').slice(0, 2400),
+    ]
       .filter(Boolean)
       .join('\n'),
   );
@@ -67,8 +87,12 @@ export async function enrichNode(
   if (!out?.summary) return fallback;
   return {
     summary: out.summary.trim(),
-    keyTerms: [...new Set([...(out.keyTerms ?? []), ...fallback.keyTerms].map((t) => t.trim()).filter(Boolean))].slice(0, 6),
+    keyTerms: [...new Set([...(out.keyTerms ?? []), ...fallback.keyTerms].map((t) => t.trim()).filter(Boolean))].slice(
+      0,
+      6,
+    ),
     // Trust URL rules for well-known sites; the model decides the rest.
-    pageType: node.pageType !== 'other' ? node.pageType : PAGE_TYPES.includes(out.pageType) ? out.pageType : fallback.pageType,
+    pageType:
+      node.pageType !== 'other' ? node.pageType : PAGE_TYPES.includes(out.pageType) ? out.pageType : fallback.pageType,
   };
 }

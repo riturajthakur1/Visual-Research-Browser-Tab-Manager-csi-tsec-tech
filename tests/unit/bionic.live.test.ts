@@ -23,29 +23,41 @@ describe.skipIf(!up)('Bionic (live)', () => {
     expect(await pickEmbedModel({ baseUrl })).toMatch(/embeddinggemma/);
   });
 
-  it.each(['en', 'hi'] as const)('files every fixture page correctly with %s questions', async (lang) => {
-    const model = (await pickEmbedModel({ baseUrl }))!;
-    const space: EmbedSpace = {
-      id: `test:${model}`,
-      label: model,
-      kind: 'bionic',
-      calib: { relLo: 0.12, relHi: 0.45, centeredScale: 0.35, queryPrefix: 'task: search result | query: ', docPrefix: 'title: none | text: ' },
-      embedRaw: (texts) => embed({ baseUrl, embedModel: model }, texts),
-    };
-    const ws = newWorkspace('Live', fixture.goal[lang]);
-    const questions = fixture.questions[lang].map((t, i) => makeQuestion(ws.id, t, i));
-    const scorer = await embeddingScorer(space, ws.goal, questions);
-    const pages = fixture.docs.map((d, i) => makePage(ws.id, `https://s${i}.example/${d.label}`, { title: d.label, text: d.text }));
-    const ctx = { ws, questions, nodesById: new Map(pages.map((p) => [p.id, p])), rules: [], scorer };
-    let correct = 0;
-    for (const [i, d] of fixture.docs.entries()) {
-      const a = await decideAttachment(pages[i], ctx);
-      const want = d.answers >= 0 ? questions[d.answers].id : null;
-      if (a?.questionId === want) correct++;
-    }
-    // Close calls may park instead of attaching without a model tie-break; wrong filings are what matters.
-    expect(correct).toBeGreaterThanOrEqual(fixture.docs.length - 2);
-  }, 60_000);
+  it.each(['en', 'hi'] as const)(
+    'files every fixture page correctly with %s questions',
+    async (lang) => {
+      const model = (await pickEmbedModel({ baseUrl }))!;
+      const space: EmbedSpace = {
+        id: `test:${model}`,
+        label: model,
+        kind: 'bionic',
+        calib: {
+          relLo: 0.12,
+          relHi: 0.45,
+          centeredScale: 0.35,
+          queryPrefix: 'task: search result | query: ',
+          docPrefix: 'title: none | text: ',
+        },
+        embedRaw: (texts) => embed({ baseUrl, embedModel: model }, texts),
+      };
+      const ws = newWorkspace('Live', fixture.goal[lang]);
+      const questions = fixture.questions[lang].map((t, i) => makeQuestion(ws.id, t, i));
+      const scorer = await embeddingScorer(space, ws.goal, questions);
+      const pages = fixture.docs.map((d, i) =>
+        makePage(ws.id, `https://s${i}.example/${d.label}`, { title: d.label, text: d.text }),
+      );
+      const ctx = { ws, questions, nodesById: new Map(pages.map((p) => [p.id, p])), rules: [], scorer };
+      let correct = 0;
+      for (const [i, d] of fixture.docs.entries()) {
+        const a = await decideAttachment(pages[i], ctx);
+        const want = d.answers >= 0 ? questions[d.answers].id : null;
+        if (a?.questionId === want) correct++;
+      }
+      // Close calls may park instead of attaching without a model tie-break; wrong filings are what matters.
+      expect(correct).toBeGreaterThanOrEqual(fixture.docs.length - 2);
+    },
+    60_000,
+  );
 
   it('drafts a Hindi route in Hindi', async () => {
     const goal = fixture.goal.hi;

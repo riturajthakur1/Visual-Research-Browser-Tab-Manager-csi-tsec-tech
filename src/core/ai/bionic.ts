@@ -85,8 +85,11 @@ function stripFences(text: string): string {
 export async function chatJson<T>(cfg: BionicConfig, req: JsonRequest, timeoutMs = 90_000): Promise<T> {
   const model = await pickChatModel(cfg);
   if (!model) throw new Error('No chat model is available in Bionic');
-  // Qwen3 hybrid models reason before answering unless told not to.
-  const noThink = !cfg.thinking && /qwen3(?!.*(2507|vl|instruct))/i.test(model) ? ' /no_think' : '';
+  // Small reasoning models (Gemma 4, Qwen3) think out loud for hundreds of tokens unless told not to,
+  // even with reasoning_effort "none"; an explicit instruction stops it (7 s → 1.2 s for a tie-break).
+  const noThink = cfg.thinking
+    ? ''
+    : ` Reply only with JSON, immediately, without thinking out loud.${/qwen3(?!.*(2507|vl|instruct))/i.test(model) ? ' /no_think' : ''}`;
   const res = await fetch(`${base(cfg.baseUrl)}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,9 +108,10 @@ export async function chatJson<T>(cfg: BionicConfig, req: JsonRequest, timeoutMs
     }),
   });
   if (!res.ok) throw new Error(`Bionic chat returned ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = body.choices?.[0]?.message?.content ?? '';
-  return JSON.parse(stripFences(content)) as T;
+  const body = (await res.json()) as { choices?: { message?: { content?: string }; finish_reason?: string }[] };
+  const choice = body.choices?.[0];
+  if (choice?.finish_reason === 'length') throw new Error(`${req.name}: the model ran out of tokens before finishing`);
+  return JSON.parse(stripFences(choice?.message?.content ?? '')) as T;
 }
 
 export async function embed(cfg: BionicConfig, inputs: string[], timeoutMs = 30_000): Promise<number[][]> {

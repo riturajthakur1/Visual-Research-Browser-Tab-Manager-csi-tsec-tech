@@ -1,14 +1,26 @@
 import type { Question, TrailNode } from '../../src/core/types';
 import { siteOf, uid } from '../../src/core/util';
 
-export function makeQuestion(wsId: string, text: string, order: number, keyTerms: string[] = [], searches: string[] = []): Question {
+export function makeQuestion(
+  wsId: string,
+  text: string,
+  order: number,
+  keyTerms: string[] = [],
+  searches: string[] = [],
+): Question {
   return { id: uid('q_'), wsId, text, keyTerms, searches, order, origin: 'user', createdAt: order, updatedAt: order };
 }
 
 export function makePage(
   wsId: string,
   url: string,
-  opts: { title?: string; text?: string; questionId?: string | null; createdAt?: number; prov?: Partial<TrailNode['prov']> } = {},
+  opts: {
+    title?: string;
+    text?: string;
+    questionId?: string | null;
+    createdAt?: number;
+    prov?: Partial<TrailNode['prov']>;
+  } = {},
 ): TrailNode {
   const t = opts.createdAt ?? Date.now();
   return {
@@ -30,7 +42,15 @@ export function makePage(
     attach:
       opts.questionId === undefined
         ? undefined
-        : { questionId: opts.questionId, score: 1, reason: '', method: 'semantic', state: 'suggested', alternatives: [], at: t },
+        : {
+            questionId: opts.questionId,
+            score: 1,
+            reason: '',
+            method: 'semantic',
+            state: 'suggested',
+            alternatives: [],
+            at: t,
+          },
     visits: 1,
     timeSpentMs: 0,
     createdAt: t,

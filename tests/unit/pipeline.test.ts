@@ -89,7 +89,11 @@ describe('pipeline', () => {
   it('proposes a goal after three searches in explore mode', async () => {
     const ws = await createWorkspace('Exploring');
     for (const [i, q] of ['mumbai floods 2005', 'mumbai drains capacity', 'mithi river floods'].entries()) {
-      await db.nodes.add({ ...makePage(ws.id, `https://www.google.com/search?q=${i}`, { createdAt: i }), kind: 'search', query: q });
+      await db.nodes.add({
+        ...makePage(ws.id, `https://www.google.com/search?q=${i}`, { createdAt: i }),
+        kind: 'search',
+        query: q,
+      });
     }
     await refreshProposals(ws.id, offline);
     expect((await db.workspaces.get(ws.id))?.proposedGoal).toMatch(/mumbai|mithi/i);
@@ -103,7 +107,18 @@ describe('pipeline', () => {
       'Wankhede stadium hosts IPL cricket final, Mumbai Indians celebrate',
     ];
     for (const [i, text] of cricket.entries()) {
-      await db.nodes.add({ ...makePage(ws.id, `https://cricket${i}.example`, { title: text, text, createdAt: i }), attach: { questionId: null, score: 0, reason: '', method: 'semantic', state: 'suggested', alternatives: [], at: 0 } });
+      await db.nodes.add({
+        ...makePage(ws.id, `https://cricket${i}.example`, { title: text, text, createdAt: i }),
+        attach: {
+          questionId: null,
+          score: 0,
+          reason: '',
+          method: 'semantic',
+          state: 'suggested',
+          alternatives: [],
+          at: 0,
+        },
+      });
     }
     await refreshProposals(ws.id, offline);
     const proposal = (await db.workspaces.get(ws.id))?.proposedQuestion;

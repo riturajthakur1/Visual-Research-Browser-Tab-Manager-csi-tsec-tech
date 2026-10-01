@@ -16,7 +16,7 @@ export class ThreadDB extends Dexie {
     this.version(1).stores({
       workspaces: 'id, updatedAt',
       questions: 'id, wsId, [wsId+order]',
-      nodes: 'id, wsId, kind, [wsId+url], createdAt',
+      nodes: 'id, wsId, kind, [wsId+canonicalUrl], createdAt',
       links: 'id, wsId, from, to',
       rules: 'id, wsId, nodeId',
       events: '++seq, wsId, [wsId+at]',

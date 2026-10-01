@@ -17,9 +17,15 @@ const KEY_TERMS = [
 ];
 const questions: Question[] = fixture.questions.en.map((text, i) => makeQuestion(ws.id, text, i, KEY_TERMS[i], []));
 const englishDocs = fixture.docs.filter((d) => !d.label.includes('-'));
-const pages = englishDocs.map((d, i) => makePage(ws.id, `https://site${i}.example/${d.label}`, { title: d.label, text: d.text, createdAt: i }));
+const pages = englishDocs.map((d, i) =>
+  makePage(ws.id, `https://site${i}.example/${d.label}`, { title: d.label, text: d.text, createdAt: i }),
+);
 
-function context(nodes: TrailNode[] = pages, rules: Rule[] = [], aiMode: 'off' | 'suggest' | 'auto' = 'suggest'): AttachContext {
+function context(
+  nodes: TrailNode[] = pages,
+  rules: Rule[] = [],
+  aiMode: 'off' | 'suggest' | 'auto' = 'suggest',
+): AttachContext {
   return {
     ws: { ...ws, settings: { ...ws.settings, aiMode } },
     questions,
@@ -30,37 +36,69 @@ function context(nodes: TrailNode[] = pages, rules: Rule[] = [], aiMode: 'off' |
 }
 
 describe('decideAttachment (keyword matching)', () => {
-  it.each(englishDocs.filter((d) => d.answers >= 0).map((d) => [d.label, d.answers] as const))('files %s under question index %i', async (label, answer) => {
-    const node = pages.find((p) => p.title === label)!;
-    const a = await decideAttachment(node, context());
-    expect(a?.questionId).toBe(questions[answer].id);
-    expect(a?.reason).toMatch(new RegExp(`^Answers Q${answer + 1}`));
-    expect(a?.state).toBe('suggested');
-  });
+  it.each(englishDocs.filter((d) => d.answers >= 0).map((d) => [d.label, d.answers] as const))(
+    'files %s under question index %i',
+    async (label, answer) => {
+      const node = pages.find((p) => p.title === label)!;
+      const a = await decideAttachment(node, context());
+      expect(a?.questionId).toBe(questions[answer].id);
+      expect(a?.reason).toMatch(new RegExp(`^Answers Q${answer + 1}`));
+      expect(a?.state).toBe('suggested');
+    },
+  );
 
   it('parks off-topic pages', async () => {
     for (const label of ['offtopic', 'react']) {
-      const a = await decideAttachment(pages.find((p) => p.title === label)!, context());
+      const a = await decideAttachment(
+        pages.find((p) => p.title === label)!,
+        context(),
+      );
       expect(a?.questionId).toBeNull();
     }
   });
 
   it('files pages from a prepared search with certainty', async () => {
-    const search: TrailNode = { ...makePage(ws.id, 'https://www.google.com/search?q=x'), kind: 'search', query: 'mumbai drains capacity', prov: { openedAt: 0, questionTag: questions[1].id } };
-    const page = makePage(ws.id, 'https://unrelated.example', { title: 'Anything', prov: { searchId: search.id, questionTag: questions[1].id } });
+    const search: TrailNode = {
+      ...makePage(ws.id, 'https://www.google.com/search?q=x'),
+      kind: 'search',
+      query: 'mumbai drains capacity',
+      prov: { openedAt: 0, questionTag: questions[1].id },
+    };
+    const page = makePage(ws.id, 'https://unrelated.example', {
+      title: 'Anything',
+      prov: { searchId: search.id, questionTag: questions[1].id },
+    });
     const a = await decideAttachment(page, context([...pages, search, page]));
     expect(a).toMatchObject({ questionId: questions[1].id, method: 'prepared', state: 'accepted', score: 1 });
     expect(a?.reason).toContain('mumbai drains capacity');
   });
 
   it('never moves a page the user filed', async () => {
-    const node = { ...pages[0], attach: { questionId: questions[5].id, score: 1, reason: 'You filed this here', method: 'user' as const, state: 'accepted' as const, alternatives: [], at: 0 } };
+    const node = {
+      ...pages[0],
+      attach: {
+        questionId: questions[5].id,
+        score: 1,
+        reason: 'You filed this here',
+        method: 'user' as const,
+        state: 'accepted' as const,
+        alternatives: [],
+        at: 0,
+      },
+    };
     expect(await decideAttachment(node, context())).toBeUndefined();
   });
 
   it('respects a rejected question', async () => {
     const node = pages.find((p) => p.title === 'drainage')!;
-    const rule: Rule = { id: 'r', wsId: ws.id, kind: 'cannot-attach', nodeId: node.id, questionId: questions[1].id, createdAt: 0 };
+    const rule: Rule = {
+      id: 'r',
+      wsId: ws.id,
+      kind: 'cannot-attach',
+      nodeId: node.id,
+      questionId: questions[1].id,
+      createdAt: 0,
+    };
     const a = await decideAttachment(node, context(pages, [rule]));
     expect(a?.questionId).not.toBe(questions[1].id);
   });
@@ -73,8 +111,20 @@ describe('decideAttachment (keyword matching)', () => {
 
   it('inherits the question of the page it was opened from', async () => {
     const parent = { ...pages.find((p) => p.title === 'mangrove')! };
-    parent.attach = { questionId: questions[2].id, score: 1, reason: '', method: 'user', state: 'accepted', alternatives: [], at: 0 };
-    const child = makePage(ws.id, 'https://child.example', { title: 'Mahim creek reclamation history', text: 'Mahim creek was reclaimed in stages.', prov: { openerId: parent.id } });
+    parent.attach = {
+      questionId: questions[2].id,
+      score: 1,
+      reason: '',
+      method: 'user',
+      state: 'accepted',
+      alternatives: [],
+      at: 0,
+    };
+    const child = makePage(ws.id, 'https://child.example', {
+      title: 'Mahim creek reclamation history',
+      text: 'Mahim creek was reclaimed in stages.',
+      prov: { openerId: parent.id },
+    });
     const a = await decideAttachment(child, context([...pages, parent, child]));
     expect(a?.questionId).toBe(questions[2].id);
     expect(a?.reason).toContain('opened from');
@@ -92,10 +142,14 @@ describe('decideAttachment (keyword matching)', () => {
 
     it('asks the model and records its reason', async () => {
       let candidates = '';
-      const ctx = { ...context(), scorer: closeScorer, llm: async <T,>(req: { user: string }) => {
-        candidates = req.user;
-        return { question: 2, reason: 'Describes drain capacity problems.' } as T;
-      } };
+      const ctx = {
+        ...context(),
+        scorer: closeScorer,
+        llm: async <T>(req: { user: string }) => {
+          candidates = req.user;
+          return { question: 2, reason: 'Describes drain capacity problems.' } as T;
+        },
+      };
       const a = await decideAttachment(vague, ctx);
       expect(candidates).toContain('2. How does Mumbai');
       expect(a).toMatchObject({ questionId: questions[1].id, method: 'llm' });
@@ -103,7 +157,7 @@ describe('decideAttachment (keyword matching)', () => {
     });
 
     it('parks the page when the model says it answers none', async () => {
-      const ctx = { ...context(), scorer: closeScorer, llm: async <T,>() => ({ question: 0, reason: 'Neither.' }) as T };
+      const ctx = { ...context(), scorer: closeScorer, llm: async <T>() => ({ question: 0, reason: 'Neither.' }) as T };
       expect((await decideAttachment(vague, ctx))?.questionId).toBeNull();
     });
 

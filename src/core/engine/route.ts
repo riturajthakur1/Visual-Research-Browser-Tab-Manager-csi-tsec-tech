@@ -20,17 +20,7 @@ export interface RouteDraft {
 }
 
 export type GoalType =
-  | 'debug'
-  | 'compare'
-  | 'decide'
-  | 'howto'
-  | 'why'
-  | 'evaluate'
-  | 'event'
-  | 'define'
-  | 'future'
-  | 'list'
-  | 'topic';
+  'debug' | 'compare' | 'decide' | 'howto' | 'why' | 'evaluate' | 'event' | 'define' | 'future' | 'list' | 'topic';
 
 const ROUTE_SCHEMA = {
   type: 'object',
@@ -56,17 +46,25 @@ const ROUTE_SCHEMA = {
 };
 
 const SHAPE_HINT: Record<GoalType, string> = {
-  debug: 'It is a technical problem: cover what the error means, likely causes, environment/version factors, known fixes, workarounds and how to verify the fix.',
-  compare: 'It is a comparison: cover what each option is, the criteria that matter, evidence on each criterion, costs/trade-offs, best fit per use case, and expert verdicts.',
-  decide: 'It is a decision: cover the realistic options, the criteria, evidence and reviews, costs and risks, and what experts recommend for this situation.',
-  howto: 'It is a how-to: cover prerequisites, the steps, tools needed, common mistakes, worked examples and how to check it worked.',
+  debug:
+    'It is a technical problem: cover what the error means, likely causes, environment/version factors, known fixes, workarounds and how to verify the fix.',
+  compare:
+    'It is a comparison: cover what each option is, the criteria that matter, evidence on each criterion, costs/trade-offs, best fit per use case, and expert verdicts.',
+  decide:
+    'It is a decision: cover the realistic options, the criteria, evidence and reviews, costs and risks, and what experts recommend for this situation.',
+  howto:
+    'It is a how-to: cover prerequisites, the steps, tools needed, common mistakes, worked examples and how to check it worked.',
   why: 'It asks why: cover background, the main causes, the mechanism, the evidence, consequences, and what would change it.',
-  evaluate: 'It asks whether a claim holds: cover what the claim says exactly, evidence for, evidence against, expert consensus, risks and context where the answer differs.',
-  event: 'It is about an event: cover the timeline, causes, who was involved, impacts, responses and lasting consequences.',
+  evaluate:
+    'It asks whether a claim holds: cover what the claim says exactly, evidence for, evidence against, expert consensus, risks and context where the answer differs.',
+  event:
+    'It is about an event: cover the timeline, causes, who was involved, impacts, responses and lasting consequences.',
   define: 'It asks what something is: cover the definition, how it works, its history, examples, uses and limitations.',
-  future: 'It asks about the future: cover the current state, drivers of change, forecasts, scenarios, risks and expert views.',
+  future:
+    'It asks about the future: cover the current state, drivers of change, forecasts, scenarios, risks and expert views.',
   list: 'It asks for a survey: cover the categories, notable examples, how they differ, how to choose between them, and sources that compare them.',
-  topic: 'It is a topic rather than a question: cover an overview, key concepts, current state, evidence and data, debates, and open problems.',
+  topic:
+    'It is a topic rather than a question: cover an overview, key concepts, current state, evidence and data, debates, and open problems.',
 };
 
 export function routeRequest(goal: string, lang = detectLanguage(goal), type = classifyGoal(goal)): JsonRequest {
@@ -78,13 +76,15 @@ export function routeRequest(goal: string, lang = detectLanguage(goal), type = c
     name: 'route',
     system:
       'You are a research planner for students. Break a research goal into 5 to 8 sub-questions that together answer it. ' +
-      'Rules: each sub-question covers a distinct aspect; none of them restates the whole goal; each is answerable from ' +
-      'web sources; order them as a reader would research them. If the goal is vague, very short or not phrased as a ' +
-      'question, plan for the most likely research intent. For each sub-question give 2-5 short key terms a relevant ' +
+      'Rules: each sub-question is one plain question under 16 words; each covers a distinct aspect with no overlap ' +
+      'between them; none of them is a broad umbrella question or restates the whole goal; each is answerable from web ' +
+      'sources; order them as a reader would research them. Key terms must be specific to their own sub-question: never ' +
+      'repeat a term across sub-questions, and do not use the goal’s main subject on its own (it matches everything). ' +
+      'If the goal is vague, very short or not phrased as a question, plan for the most likely research intent. For each sub-question give 2-5 short key terms a relevant ' +
       `page would mention, and ${searchRule}. ${languageInstruction(lang)}`,
     user: `Research goal: ${goal.trim().slice(0, 1500)}\n\nShape: ${SHAPE_HINT[type]}`,
     schema: ROUTE_SCHEMA,
-    maxTokens: 1100,
+    maxTokens: 2000,
     temperature: 0.3,
   };
 }
@@ -93,9 +93,18 @@ export function cleanDraft(raw: { questions?: DraftQuestion[] } | null): DraftQu
   const seen = new Set<string>();
   return (raw?.questions ?? [])
     .map((q) => ({
-      text: String(q.text ?? '').replace(/\s+/g, ' ').trim(),
+      text: String(q.text ?? '')
+        .replace(/\s+/g, ' ')
+        .trim(),
       keyTerms: [...new Set((q.keyTerms ?? []).map((t) => String(t).trim().toLowerCase()).filter(Boolean))].slice(0, 5),
-      searches: (q.searches ?? []).map((s) => String(s).replace(/["“”«»]/g, '').trim()).filter(Boolean).slice(0, 2),
+      searches: (q.searches ?? [])
+        .map((s) =>
+          String(s)
+            .replace(/["“”«»]/g, '')
+            .trim(),
+        )
+        .filter(Boolean)
+        .slice(0, 2),
     }))
     .filter((q) => [...q.text].length > 5 && !seen.has(q.text.toLowerCase()) && seen.add(q.text.toLowerCase()))
     .map((q) => ({ ...q, text: /[?？؟]$/.test(q.text) ? q.text : q.text.replace(/[.!。！]*$/, '') + '?' }))
@@ -179,8 +188,18 @@ const EN_FACETS: Record<GoalType, Facet[]> = {
   ],
   compare: [
     ['What exactly are the options being compared in {t}?', ['overview'], '{k} overview', '{k} explained'],
-    ['Which criteria matter most when comparing {t}?', ['criteria', 'factors'], '{k} comparison criteria', '{k} key differences'],
-    ['What does the evidence say on performance or quality?', ['benchmark', 'evidence'], '{k} benchmark', '{k} study results'],
+    [
+      'Which criteria matter most when comparing {t}?',
+      ['criteria', 'factors'],
+      '{k} comparison criteria',
+      '{k} key differences',
+    ],
+    [
+      'What does the evidence say on performance or quality?',
+      ['benchmark', 'evidence'],
+      '{k} benchmark',
+      '{k} study results',
+    ],
     ['How do costs and trade-offs differ?', ['cost', 'trade-off'], '{k} cost', '{k} pros cons'],
     ['Which option fits which situation?', ['use case'], '{k} use cases', 'when to use {k}'],
     ['What do experts and experienced users conclude?', ['review', 'expert'], '{k} review', '{k} expert opinion'],
@@ -194,7 +213,12 @@ const EN_FACETS: Record<GoalType, Facet[]> = {
     ['What do people regret or wish they had known?', ['regret', 'mistakes'], '{k} mistakes to avoid', '{k} regret'],
   ],
   howto: [
-    ['What do I need before starting {t}?', ['prerequisites', 'requirements'], '{k} requirements', '{k} before you start'],
+    [
+      'What do I need before starting {t}?',
+      ['prerequisites', 'requirements'],
+      '{k} requirements',
+      '{k} before you start',
+    ],
     ['What are the steps, in order?', ['steps'], '{k} step by step', 'how to {k}'],
     ['Which tools or resources help most?', ['tools'], '{k} tools', '{k} resources'],
     ['What are the common mistakes?', ['mistakes'], '{k} common mistakes', '{k} tips'],

@@ -14,7 +14,8 @@ export interface LlmInfo {
   label: string;
 }
 
-const inServiceWorker = () => typeof window === 'undefined' && typeof (globalThis as { importScripts?: unknown }).importScripts === 'function';
+const inServiceWorker = () =>
+  typeof window === 'undefined' && typeof (globalThis as { importScripts?: unknown }).importScripts === 'function';
 
 let cached: { at: number; key: string; info: LlmInfo | null } | null = null;
 
@@ -49,19 +50,31 @@ export async function resolveLlm(settings?: GlobalSettings, fresh = false): Prom
   return info;
 }
 
+async function runOn<T>(info: LlmInfo, s: GlobalSettings, req: JsonRequest): Promise<T> {
+  if (info.provider === 'bionic')
+    return chatJson<T>({ baseUrl: s.bionicUrl, model: s.bionicModel, thinking: s.bionicThinking }, req);
+  if (inServiceWorker()) return offscreenPrompt<T>(req);
+  return builtinJson<T>(req);
+}
+
 /** Runs a JSON task on the best available local model. Returns null when none is available or the call fails. */
 export async function llmJson<T>(req: JsonRequest): Promise<T | null> {
   const s = await getSettings();
   const info = await resolveLlm(s);
   if (!info) return null;
   try {
-    if (info.provider === 'bionic') {
-      return await chatJson<T>({ baseUrl: s.bionicUrl, model: s.bionicModel, thinking: s.bionicThinking }, req);
+    return await runOn<T>(info, s, req);
+  } catch (first) {
+    // Small models occasionally break their JSON; one cooler, roomier retry fixes most of it.
+    if (first instanceof SyntaxError || /ran out of tokens/.test(String(first))) {
+      try {
+        return await runOn<T>(info, s, { ...req, temperature: 0, maxTokens: Math.round((req.maxTokens ?? 800) * 1.5) });
+      } catch (second) {
+        console.warn(`[thread.io] ${req.name} failed twice on ${info.label}:`, second);
+        return null;
+      }
     }
-    if (inServiceWorker()) return await offscreenPrompt<T>(req);
-    return await builtinJson<T>(req);
-  } catch (e) {
-    console.warn(`[thread.io] ${req.name} failed on ${info.label}:`, e);
+    console.warn(`[thread.io] ${req.name} failed on ${info.label}:`, first);
     cached = null;
     return null;
   }

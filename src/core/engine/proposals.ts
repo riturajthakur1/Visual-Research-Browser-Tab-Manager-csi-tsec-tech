@@ -20,7 +20,14 @@ export function goalRequest(queries: string[], titles: string[]): JsonRequest {
     system:
       'Infer the research goal behind a person’s web searches. Write it as one clear question a student could research, ' +
       `under 20 words, without inventing specifics the searches do not support. ${languageInstruction(lang)}`,
-    user: `Searches, oldest first:\n${queries.map((q) => `- ${q}`).join('\n')}${titles.length ? `\n\nPages opened:\n${titles.slice(0, 8).map((t) => `- ${sanitizeForModel(t)}`).join('\n')}` : ''}`,
+    user: `Searches, oldest first:\n${queries.map((q) => `- ${q}`).join('\n')}${
+      titles.length
+        ? `\n\nPages opened:\n${titles
+            .slice(0, 8)
+            .map((t) => `- ${sanitizeForModel(t)}`)
+            .join('\n')}`
+        : ''
+    }`,
     schema: {
       type: 'object',
       properties: { goal: { type: 'string' } },
@@ -35,7 +42,8 @@ export function goalRequest(queries: string[], titles: string[]): JsonRequest {
 /** Without a model: the search that shares the most words with the others. */
 export function heuristicGoal(queries: string[]): string {
   const best = [...queries].sort((a, b) => {
-    const score = (q: string) => queries.reduce((s, o) => s + (o === q ? 0 : overlapScore(q, o)), 0) + q.split(/\s+/).length * 0.05;
+    const score = (q: string) =>
+      queries.reduce((s, o) => s + (o === q ? 0 : overlapScore(q, o)), 0) + q.split(/\s+/).length * 0.05;
     return score(b) - score(a);
   })[0];
   if (!best) return '';
@@ -67,7 +75,14 @@ export function findCluster(items: ClusterInput[], threshold: number): TrailNode
     sim = (i, j) => cosine(items[i].vector!, items[j].vector!);
   } else {
     const corpus = new Corpus();
-    const tfs = items.map((it) => termFrequencies([{ text: `${it.node.title} ${it.node.title} ${it.node.description ?? ''} ${it.node.summary ?? ''} ${(it.node.text ?? '').slice(0, 1500)}`, weight: 1 }]));
+    const tfs = items.map((it) =>
+      termFrequencies([
+        {
+          text: `${it.node.title} ${it.node.title} ${it.node.description ?? ''} ${it.node.summary ?? ''} ${(it.node.text ?? '').slice(0, 1500)}`,
+          weight: 1,
+        },
+      ]),
+    );
     tfs.forEach((tf) => corpus.add(tf));
     const vs = tfs.map((tf) => corpus.weigh(tf));
     sim = (i, j) => cosineSparse(vs[i], vs[j]);
@@ -84,7 +99,13 @@ export function findCluster(items: ClusterInput[], threshold: number): TrailNode
   return best.length >= CLUSTER_MIN ? best.map((i) => items[i].node) : null;
 }
 
-export const clusterSignature = (nodes: TrailNode[]) => hash(nodes.map((n) => n.id).sort().join('|'));
+export const clusterSignature = (nodes: TrailNode[]) =>
+  hash(
+    nodes
+      .map((n) => n.id)
+      .sort()
+      .join('|'),
+  );
 
 export function questionRequest(goal: string, existing: Question[], pages: TrailNode[]): JsonRequest {
   const lang = detectLanguage(goal || existing.map((q) => q.text).join(' '));
@@ -142,5 +163,10 @@ export async function proposeQuestion(
   const out = await llm<Omit<ProposedQuestion, 'nodeIds'>>(questionRequest(goal, existing, pages));
   const base = out?.text ? out : heuristicQuestion(goal, pages);
   const text = /[?？؟]$/.test(base.text.trim()) ? base.text.trim() : base.text.trim() + '?';
-  return { text, keyTerms: base.keyTerms.slice(0, 5), searches: base.searches.slice(0, 2), nodeIds: pages.map((p) => p.id) };
+  return {
+    text,
+    keyTerms: base.keyTerms.slice(0, 5),
+    searches: base.searches.slice(0, 2),
+    nodeIds: pages.map((p) => p.id),
+  };
 }

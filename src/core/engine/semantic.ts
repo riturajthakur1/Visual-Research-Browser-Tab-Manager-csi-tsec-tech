@@ -42,7 +42,12 @@ const minus = (a: number[], b: number[]) => a.map((x, i) => x - b[i]);
 
 export async function embeddingScorer(space: EmbedSpace, goal: string, questions: Question[]): Promise<SemanticScorer> {
   const { calib } = space;
-  const qVecs = questions.length ? await embedTexts(space, questions.map((q) => ({ text: questionText(q), role: 'query' as const }))) : [];
+  const qVecs = questions.length
+    ? await embedTexts(
+        space,
+        questions.map((q) => ({ text: questionText(q), role: 'query' as const })),
+      )
+    : [];
   const [goalVec] = goal ? await embedTexts(space, [{ text: goal, role: 'query' }]) : [];
   const anchors = goalVec ? [...qVecs, goalVec] : qVecs;
   const centroid = anchors.length ? mean(anchors) : null;
@@ -95,7 +100,10 @@ export function lexicalScorer(goal: string, questions: Question[], nodes: TrailN
   for (const n of nodes.slice(-300)) if (n.kind === 'page') corpus.add(termFrequencies(nodeFields(n)));
   const qVecs = qTfs.map((tf) => corpus.weigh(tf));
   const topic = corpus.weigh(
-    termFrequencies([{ text: goal, weight: 3 }, ...questions.map((q) => ({ text: `${q.text} ${q.keyTerms.join(' ')}`, weight: 1 }))]),
+    termFrequencies([
+      { text: goal, weight: 3 },
+      ...questions.map((q) => ({ text: `${q.text} ${q.keyTerms.join(' ')}`, weight: 1 })),
+    ]),
   );
 
   const score = (tf: TermVector): SemanticScores => {

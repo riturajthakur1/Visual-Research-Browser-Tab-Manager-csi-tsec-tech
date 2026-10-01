@@ -33,12 +33,16 @@ describe('stem', () => {
 
 describe('keyTerms', () => {
   it('finds repeated phrases', () => {
-    const text = 'Storm drains in Mumbai. The storm drains overflow. Storm drains were built in 1860. Pumping stations help.';
+    const text =
+      'Storm drains in Mumbai. The storm drains overflow. Storm drains were built in 1860. Pumping stations help.';
     expect(keyTerms(text, 3)[0]).toBe('storm drains');
   });
 
   it('works on Hindi text', () => {
-    const t = keyTerms('मुंबई की नालियाँ पुरानी हैं। नालियाँ बारिश का पानी नहीं निकाल पातीं। मुंबई में बाढ़ आती है।', 3);
+    const t = keyTerms(
+      'मुंबई की नालियाँ पुरानी हैं। नालियाँ बारिश का पानी नहीं निकाल पातीं। मुंबई में बाढ़ आती है।',
+      3,
+    );
     expect(t).toContain('नालियाँ');
   });
 });

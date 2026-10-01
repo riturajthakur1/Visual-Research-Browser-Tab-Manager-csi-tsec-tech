@@ -2,21 +2,54 @@
 
 export const DEFAULT_BLOCKLIST = [
   // mail and messaging
-  'mail.google.com', 'outlook.live.com', 'outlook.office.com', 'mail.yahoo.com', 'proton.me', 'web.whatsapp.com',
-  'web.telegram.org', 'messenger.com', 'discord.com', 'slack.com', 'teams.microsoft.com',
+  'mail.google.com',
+  'outlook.live.com',
+  'outlook.office.com',
+  'mail.yahoo.com',
+  'proton.me',
+  'web.whatsapp.com',
+  'web.telegram.org',
+  'messenger.com',
+  'discord.com',
+  'slack.com',
+  'teams.microsoft.com',
   // identity and accounts
-  'accounts.google.com', 'login.microsoftonline.com', 'login.live.com', 'appleid.apple.com', 'auth0.com', 'okta.com',
+  'accounts.google.com',
+  'login.microsoftonline.com',
+  'login.live.com',
+  'appleid.apple.com',
+  'auth0.com',
+  'okta.com',
   // money
-  'paypal.com', 'stripe.com', 'paytm.com', 'phonepe.com', 'razorpay.com', 'onlinesbi.sbi', 'hdfcbank.com',
-  'icicibank.com', 'axisbank.com', 'kotak.com', 'chase.com', 'bankofamerica.com', 'wellsfargo.com', 'zerodha.com',
-  'groww.in', 'coinbase.com', 'binance.com',
+  'paypal.com',
+  'stripe.com',
+  'paytm.com',
+  'phonepe.com',
+  'razorpay.com',
+  'onlinesbi.sbi',
+  'hdfcbank.com',
+  'icicibank.com',
+  'axisbank.com',
+  'kotak.com',
+  'chase.com',
+  'bankofamerica.com',
+  'wellsfargo.com',
+  'zerodha.com',
+  'groww.in',
+  'coinbase.com',
+  'binance.com',
   // health records
-  'mychart.org', 'practo.com', '1mg.com',
+  'mychart.org',
+  'practo.com',
+  '1mg.com',
   // passwords
-  'bitwarden.com', '1password.com', 'lastpass.com',
+  'bitwarden.com',
+  '1password.com',
+  'lastpass.com',
 ];
 
-const SENSITIVE_PATH = /\/(login|log-in|signin|sign-in|signup|sign-up|auth|oauth2?|sso|account|checkout|payment|billing|password|reset)(\/|$|\?)/i;
+const SENSITIVE_PATH =
+  /\/(login|log-in|signin|sign-in|signup|sign-up|auth|oauth2?|sso|account|checkout|payment|billing|password|reset)(\/|$|\?)/i;
 const SENSITIVE_HOST = /(^|\.)(bank|banking|netbanking|ibank|secure)[.-]/i;
 
 /** True for pages Thread.io must never read or store. */

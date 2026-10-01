@@ -11,7 +11,14 @@ import { decideAttachment, type AttachContext } from './attach';
 import { attachedSources, sourceSignature } from './coverage';
 import { checkConflict } from './conflicts';
 import { enrichNode, heuristicEnrichment } from './enrich';
-import { clusterSignature, CLUSTER_MIN, findCluster, GOAL_AFTER_SEARCHES, proposeGoal, proposeQuestion } from './proposals';
+import {
+  clusterSignature,
+  CLUSTER_MIN,
+  findCluster,
+  GOAL_AFTER_SEARCHES,
+  proposeGoal,
+  proposeQuestion,
+} from './proposals';
 import { embeddingScorer, lexicalScorer, nodeText, type SemanticScorer } from './semantic';
 
 type Llm = <T>(req: JsonRequest) => Promise<T | null>;
@@ -41,7 +48,12 @@ export function workspaceLanguage(ws: Workspace, questions: Question[], nodes: T
   return detectLanguage(text || 'en');
 }
 
-async function buildScorer(ws: Workspace, questions: Question[], nodes: TrailNode[], deps: EngineDeps): Promise<SemanticScorer> {
+async function buildScorer(
+  ws: Workspace,
+  questions: Question[],
+  nodes: TrailNode[],
+  deps: EngineDeps,
+): Promise<SemanticScorer> {
   const space = await deps.embedSpace().catch(() => null);
   if (space) {
     try {
@@ -85,7 +97,13 @@ export function attachNodes(wsId: ID, nodeIds?: ID[], deps: EngineDeps = default
       await db.nodes.update(node.id, { attach: next, updatedAt: now() });
       if (moved) {
         changed++;
-        await logEvent({ wsId, type: 'node.attach', nodeId: node.id, questionId: next.questionId, data: { method: next.method } });
+        await logEvent({
+          wsId,
+          type: 'node.attach',
+          nodeId: node.id,
+          questionId: next.questionId,
+          data: { method: next.method },
+        });
       }
     }
     return changed;
@@ -98,7 +116,13 @@ export async function enrichNodeById(nodeId: ID, deps: EngineDeps = defaultDeps)
   const { ws, questions, nodes } = await workspaceData(node.wsId);
   if (!ws) return;
   const e = await enrichNode(node, ws.goal, workspaceLanguage(ws, questions, nodes), deps.llm);
-  await db.nodes.update(nodeId, { summary: e.summary, keyTerms: e.keyTerms, pageType: e.pageType, enriched: true, updatedAt: now() });
+  await db.nodes.update(nodeId, {
+    summary: e.summary,
+    keyTerms: e.keyTerms,
+    pageType: e.pageType,
+    enriched: true,
+    updatedAt: now(),
+  });
 }
 
 /** Full pipeline for a page that was just captured or re-read. */
@@ -108,7 +132,11 @@ export async function processNode(nodeId: ID, deps: EngineDeps = defaultDeps): P
   const wsId = node.wsId;
   if (!node.keyTerms.length || !node.summary) {
     const h = heuristicEnrichment(node);
-    await db.nodes.update(nodeId, { keyTerms: node.keyTerms.length ? node.keyTerms : h.keyTerms, summary: node.summary || h.summary, pageType: h.pageType });
+    await db.nodes.update(nodeId, {
+      keyTerms: node.keyTerms.length ? node.keyTerms : h.keyTerms,
+      summary: node.summary || h.summary,
+      pageType: h.pageType,
+    });
   }
   await attachNodes(wsId, [nodeId], deps);
   await enrichNodeById(nodeId, deps);
@@ -166,13 +194,18 @@ export function refreshProposals(wsId: ID, deps: EngineDeps = defaultDeps): Prom
     }
 
     if (!questions.length) return;
-    const parked = nodes.filter((n) => n.kind === 'page' && n.attach?.questionId === null && n.attach.method !== 'user');
+    const parked = nodes.filter(
+      (n) => n.kind === 'page' && n.attach?.questionId === null && n.attach.method !== 'user',
+    );
     if (parked.length < CLUSTER_MIN) return;
     const space = await deps.embedSpace().catch(() => null);
     let vectors: number[][] | undefined;
     if (space) {
       try {
-        vectors = await embedTexts(space, parked.map((n) => ({ text: nodeText(n), role: 'document' as const })));
+        vectors = await embedTexts(
+          space,
+          parked.map((n) => ({ text: nodeText(n), role: 'document' as const })),
+        );
       } catch {
         vectors = undefined;
       }
@@ -184,7 +217,11 @@ export function refreshProposals(wsId: ID, deps: EngineDeps = defaultDeps): Prom
     if (!cluster) return;
     const signature = clusterSignature(cluster);
     if (ws.dismissedProposals?.includes(signature)) return;
-    if (ws.proposedQuestion && clusterSignature(cluster.filter((n) => ws.proposedQuestion!.nodeIds.includes(n.id))) === signature) return;
+    if (
+      ws.proposedQuestion &&
+      clusterSignature(cluster.filter((n) => ws.proposedQuestion!.nodeIds.includes(n.id))) === signature
+    )
+      return;
     const proposal = await proposeQuestion(ws.goal, questions, cluster, deps.llm);
     await db.workspaces.update(wsId, { proposedQuestion: proposal, updatedAt: now() });
   });

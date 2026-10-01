@@ -27,7 +27,11 @@ export async function setGoal(wsId: ID, goal: string) {
  * Saves a drafted route. Questions the user edited by hand survive a re-draft;
  * questions whose text is unchanged keep their id (and so their pages).
  */
-export async function saveRoute(wsId: ID, drafts: (DraftQuestion & { id?: ID; edited?: boolean })[], origin: Question['origin']) {
+export async function saveRoute(
+  wsId: ID,
+  drafts: (DraftQuestion & { id?: ID; edited?: boolean })[],
+  origin: Question['origin'],
+) {
   const existing = await db.questions.where('wsId').equals(wsId).toArray();
   const byText = new Map(existing.map((q) => [q.text.trim().toLowerCase(), q]));
   const t = now();
@@ -52,8 +56,14 @@ export async function saveRoute(wsId: ID, drafts: (DraftQuestion & { id?: ID; ed
   await db.transaction('rw', [db.questions, db.nodes, db.events], async () => {
     await db.questions.bulkDelete(removed.map((q) => q.id));
     await db.questions.bulkPut(next);
-    if (removed.length) await detachFrom(wsId, removed.map((q) => q.id));
-    for (const q of next) if (!existing.some((e) => e.id === q.id)) await logEvent({ wsId, type: 'question.add', questionId: q.id, data: { text: q.text } });
+    if (removed.length)
+      await detachFrom(
+        wsId,
+        removed.map((q) => q.id),
+      );
+    for (const q of next)
+      if (!existing.some((e) => e.id === q.id))
+        await logEvent({ wsId, type: 'question.add', questionId: q.id, data: { text: q.text } });
     for (const q of removed) await logEvent({ wsId, type: 'question.remove', questionId: q.id });
   });
   await db.workspaces.update(wsId, { mode: 'gps', updatedAt: t });
@@ -65,12 +75,19 @@ async function detachFrom(wsId: ID, questionIds: ID[]) {
   const nodes = await db.nodes.where('wsId').equals(wsId).toArray();
   for (const n of nodes) {
     if (n.attach?.questionId && ids.has(n.attach.questionId)) {
-      await db.nodes.update(n.id, { attach: undefined, prov: { ...n.prov, questionTag: ids.has(n.prov.questionTag ?? '') ? undefined : n.prov.questionTag } });
+      await db.nodes.update(n.id, {
+        attach: undefined,
+        prov: { ...n.prov, questionTag: ids.has(n.prov.questionTag ?? '') ? undefined : n.prov.questionTag },
+      });
     }
   }
 }
 
-export async function addQuestion(wsId: ID, draft: DraftQuestion, origin: Question['origin'] = 'user'): Promise<Question> {
+export async function addQuestion(
+  wsId: ID,
+  draft: DraftQuestion,
+  origin: Question['origin'] = 'user',
+): Promise<Question> {
   const count = await db.questions.where('wsId').equals(wsId).count();
   const t = now();
   const q: Question = {
@@ -121,9 +138,21 @@ export async function moveNode(nodeId: ID, questionId: ID | null) {
   if (!n) return;
   const from = n.attach?.questionId;
   if (from && from !== questionId) {
-    await db.rules.add({ id: uid('r_'), wsId: n.wsId, kind: 'cannot-attach', nodeId, questionId: from, createdAt: now() });
+    await db.rules.add({
+      id: uid('r_'),
+      wsId: n.wsId,
+      kind: 'cannot-attach',
+      nodeId,
+      questionId: from,
+      createdAt: now(),
+    });
   }
-  if (questionId) await db.rules.where('nodeId').equals(nodeId).filter((r) => r.questionId === questionId).delete();
+  if (questionId)
+    await db.rules
+      .where('nodeId')
+      .equals(nodeId)
+      .filter((r) => r.questionId === questionId)
+      .delete();
   await db.nodes.update(nodeId, {
     attach: {
       questionId,
@@ -144,7 +173,13 @@ export async function acceptAttachment(nodeId: ID) {
   const n = await db.nodes.get(nodeId);
   if (!n?.attach?.questionId) return;
   await db.nodes.update(nodeId, {
-    attach: { ...n.attach, method: 'user', state: 'accepted', reason: n.attach.reason.replace(/^Answers/, 'Confirmed: answers'), at: now() },
+    attach: {
+      ...n.attach,
+      method: 'user',
+      state: 'accepted',
+      reason: n.attach.reason.replace(/^Answers/, 'Confirmed: answers'),
+      at: now(),
+    },
   });
 }
 
@@ -152,12 +187,28 @@ export async function acceptAttachment(nodeId: ID) {
 export async function rejectAttachment(nodeId: ID) {
   const n = await db.nodes.get(nodeId);
   if (!n?.attach?.questionId) return;
-  await db.rules.add({ id: uid('r_'), wsId: n.wsId, kind: 'cannot-attach', nodeId, questionId: n.attach.questionId, createdAt: now() });
+  await db.rules.add({
+    id: uid('r_'),
+    wsId: n.wsId,
+    kind: 'cannot-attach',
+    nodeId,
+    questionId: n.attach.questionId,
+    createdAt: now(),
+  });
   await db.nodes.update(nodeId, { attach: undefined, prov: { ...n.prov, questionTag: undefined } });
-  await logEvent({ wsId: n.wsId, type: 'node.attach', nodeId, questionId: null, data: { method: 'user', rejected: n.attach.questionId } });
+  await logEvent({
+    wsId: n.wsId,
+    type: 'node.attach',
+    nodeId,
+    questionId: null,
+    data: { method: 'user', rejected: n.attach.questionId },
+  });
 }
 
-export async function updateNode(nodeId: ID, patch: Partial<Pick<TrailNode, 'notes' | 'tags' | 'importance' | 'pos' | 'pinned' | 'title'>>) {
+export async function updateNode(
+  nodeId: ID,
+  patch: Partial<Pick<TrailNode, 'notes' | 'tags' | 'importance' | 'pos' | 'pinned' | 'title'>>,
+) {
   await db.nodes.update(nodeId, { ...patch, updatedAt: now() });
 }
 
@@ -215,7 +266,18 @@ export async function deleteNode(nodeId: ID) {
 }
 
 export async function addLink(wsId: ID, from: ID, to: ID, type: LinkType): Promise<Link> {
-  const link: Link = { id: uid('l_'), wsId, from, to, type, origin: 'user', confidence: 1, reason: 'Added by you', state: 'accepted', createdAt: now() };
+  const link: Link = {
+    id: uid('l_'),
+    wsId,
+    from,
+    to,
+    type,
+    origin: 'user',
+    confidence: 1,
+    reason: 'Added by you',
+    state: 'accepted',
+    createdAt: now(),
+  };
   await db.links.add(link);
   return link;
 }

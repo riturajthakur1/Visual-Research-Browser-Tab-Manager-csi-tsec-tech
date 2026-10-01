@@ -73,7 +73,11 @@ function bigrams(run: string): string[] {
 
 /** Lower-cased word tokens (letters in any script with their marks, digits), without stopwords. */
 export function words(text: string): string[] {
-  const raw = text.normalize('NFC').toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{M}\p{N}'’-]*/gu) ?? [];
+  const raw =
+    text
+      .normalize('NFC')
+      .toLowerCase()
+      .match(/[\p{L}\p{N}][\p{L}\p{M}\p{N}'’-]*/gu) ?? [];
   const out: string[] = [];
   for (const token of raw) {
     if (UNSPACED.test(token)) {
@@ -191,12 +195,24 @@ export function keyTerms(text: string, limit = 6, corpus?: Corpus): string[] {
   return picked;
 }
 
-/** Which of `terms` appear in the token set (all words of a multi-word term must be present). */
+/** Same word, or one is a prefix of the other ("drain" / "drainage", "storm" / "stormwater"). */
+function tokenMatches(token: string, tokenSet: Set<string>, prefixes: string[]): boolean {
+  if (tokenSet.has(token)) return true;
+  if ([...token].length < 4) return false;
+  return prefixes.some((p) => (p.length >= 4 && token.startsWith(p)) || (token.length >= 4 && p.startsWith(token)));
+}
+
+/** Fraction of a term's words found in the text (0..1), with prefix matching for word variants. */
+export function termCoverage(term: string, tokenSet: Set<string>, prefixes = [...tokenSet]): number {
+  const parts = tokens(term);
+  if (!parts.length) return 0;
+  return parts.filter((p) => tokenMatches(p, tokenSet, prefixes)).length / parts.length;
+}
+
+/** Terms whose words mostly appear in the token set. */
 export function matchedTerms(terms: string[], tokenSet: Set<string>): string[] {
-  return terms.filter((term) => {
-    const parts = tokens(term);
-    return parts.length > 0 && parts.every((p) => tokenSet.has(p));
-  });
+  const prefixes = [...tokenSet];
+  return terms.filter((term) => termCoverage(term, tokenSet, prefixes) >= 0.5);
 }
 
 export function overlapScore(a: string, b: string): number {

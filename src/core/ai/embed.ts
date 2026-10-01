@@ -35,10 +35,22 @@ export interface EmbedSpace {
 const CALIBRATIONS: [RegExp, Calibration][] = [
   [
     /embeddinggemma|embedding-gemma/i,
-    { relLo: 0.12, relHi: 0.45, centeredScale: 0.35, queryPrefix: 'task: search result | query: ', docPrefix: 'title: none | text: ' },
+    {
+      relLo: 0.12,
+      relHi: 0.45,
+      centeredScale: 0.35,
+      queryPrefix: 'task: search result | query: ',
+      docPrefix: 'title: none | text: ',
+    },
   ],
-  [/multilingual-e5|e5-/i, { relLo: 0.79, relHi: 0.87, centeredScale: 0.32, queryPrefix: 'query: ', docPrefix: 'passage: ' }],
-  [/nomic/i, { relLo: 0.62, relHi: 0.8, centeredScale: 0.35, queryPrefix: 'search_query: ', docPrefix: 'search_document: ' }],
+  [
+    /multilingual-e5|e5-/i,
+    { relLo: 0.79, relHi: 0.87, centeredScale: 0.32, queryPrefix: 'query: ', docPrefix: 'passage: ' },
+  ],
+  [
+    /nomic/i,
+    { relLo: 0.62, relHi: 0.8, centeredScale: 0.35, queryPrefix: 'search_query: ', docPrefix: 'search_document: ' },
+  ],
   [/minilm/i, { relLo: 0.2, relHi: 0.55, centeredScale: 0.4, queryPrefix: '', docPrefix: '' }],
 ];
 const GENERIC: Calibration = { relLo: 0.2, relHi: 0.6, centeredScale: 0.35, queryPrefix: '', docPrefix: '' };
@@ -75,7 +87,12 @@ export async function resolveEmbedSpace(settings?: GlobalSettings): Promise<Embe
       /* server not running */
     }
   }
-  if (!space && (s.embedProvider === 'auto' || s.embedProvider === 'browser') && typeof chrome !== 'undefined' && chrome.offscreen) {
+  if (
+    !space &&
+    (s.embedProvider === 'auto' || s.embedProvider === 'browser') &&
+    typeof chrome !== 'undefined' &&
+    chrome.offscreen
+  ) {
     space = {
       id: `browser:${BROWSER_MODEL}`,
       label: 'In-browser · multilingual-e5',
@@ -94,7 +111,9 @@ export function resetEmbedSpace() {
 
 /** Embeds texts with caching in IndexedDB. Throws if the provider fails. */
 export async function embedTexts(space: EmbedSpace, items: { text: string; role: EmbedRole }[]): Promise<number[][]> {
-  const prefixed = items.map(({ text, role }) => (role === 'query' ? space.calib.queryPrefix : space.calib.docPrefix) + text);
+  const prefixed = items.map(
+    ({ text, role }) => (role === 'query' ? space.calib.queryPrefix : space.calib.docPrefix) + text,
+  );
   const keys = prefixed.map((t) => `${space.id}|${hash(t)}|${t.length}`);
   const stored = await db.vectors.bulkGet(keys);
   const out: number[][] = stored.map((v) => v?.vector ?? []);

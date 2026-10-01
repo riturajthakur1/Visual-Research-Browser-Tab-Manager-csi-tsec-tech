@@ -11,11 +11,44 @@ export interface LanguageInfo {
 }
 
 const NAMES: Record<string, string> = {
-  en: 'English', hi: 'Hindi', mr: 'Marathi', ne: 'Nepali', bn: 'Bengali', pa: 'Punjabi', gu: 'Gujarati', ta: 'Tamil',
-  te: 'Telugu', kn: 'Kannada', ml: 'Malayalam', or: 'Odia', ur: 'Urdu', ar: 'Arabic', fa: 'Persian', he: 'Hebrew',
-  ru: 'Russian', uk: 'Ukrainian', el: 'Greek', zh: 'Chinese', ja: 'Japanese', ko: 'Korean', th: 'Thai', es: 'Spanish',
-  fr: 'French', de: 'German', pt: 'Portuguese', it: 'Italian', nl: 'Dutch', id: 'Indonesian', tr: 'Turkish',
-  vi: 'Vietnamese', sw: 'Swahili', pl: 'Polish', si: 'Sinhala', my: 'Burmese', km: 'Khmer', am: 'Amharic',
+  en: 'English',
+  hi: 'Hindi',
+  mr: 'Marathi',
+  ne: 'Nepali',
+  bn: 'Bengali',
+  pa: 'Punjabi',
+  gu: 'Gujarati',
+  ta: 'Tamil',
+  te: 'Telugu',
+  kn: 'Kannada',
+  ml: 'Malayalam',
+  or: 'Odia',
+  ur: 'Urdu',
+  ar: 'Arabic',
+  fa: 'Persian',
+  he: 'Hebrew',
+  ru: 'Russian',
+  uk: 'Ukrainian',
+  el: 'Greek',
+  zh: 'Chinese',
+  ja: 'Japanese',
+  ko: 'Korean',
+  th: 'Thai',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
+  it: 'Italian',
+  nl: 'Dutch',
+  id: 'Indonesian',
+  tr: 'Turkish',
+  vi: 'Vietnamese',
+  sw: 'Swahili',
+  pl: 'Polish',
+  si: 'Sinhala',
+  my: 'Burmese',
+  km: 'Khmer',
+  am: 'Amharic',
 };
 
 const RTL = new Set(['ar', 'ur', 'fa', 'he']);
@@ -68,7 +101,10 @@ function count(text: string, re: RegExp): number {
 }
 
 function bestByWords(text: string, candidates: string[]): string | undefined {
-  const tokens = text.toLowerCase().split(/[\s,.;:!?¿¡()"'«»“”—–-]+/u).filter(Boolean);
+  const tokens = text
+    .toLowerCase()
+    .split(/[\s,.;:!?¿¡()"'«»“”—–-]+/u)
+    .filter(Boolean);
   if (!tokens.length) return undefined;
   const set = new Map<string, number>();
   for (const t of tokens) set.set(t, (set.get(t) ?? 0) + 1);

@@ -56,7 +56,12 @@ export function coverageFor(q: Question, nodes: TrailNode[], ws: Workspace, ref 
 
   const conflict = q.conflict;
   if (conflict?.verdict === 'conflict' && conflict.signature === sourceSignature(sources)) {
-    return { ...base, status: 'conflict', detail: conflict.explanation, next: 'Open both sources side by side and decide' };
+    return {
+      ...base,
+      status: 'conflict',
+      detail: conflict.explanation,
+      next: 'Open both sources side by side and decide',
+    };
   }
   if (!sources.length) {
     return { ...base, status: 'gap', detail: 'No sources yet', next: 'Run a prepared search' };

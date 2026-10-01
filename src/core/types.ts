@@ -70,6 +70,8 @@ export interface Question {
   /** True once the user edited the text; re-drafting the route never overwrites it. */
   edited?: boolean;
   conflict?: ConflictCheck;
+  /** Position on the map once the user dragged it. */
+  pos?: { x: number; y: number };
   createdAt: number;
   updatedAt: number;
 }
@@ -166,13 +168,7 @@ export interface TrailNode {
 }
 
 export type LinkType =
-  | 'related'
-  | 'supports'
-  | 'contradicts'
-  | 'links-to'
-  | 'duplicate'
-  | 'prerequisite'
-  | 'example-of';
+  'related' | 'supports' | 'contradicts' | 'links-to' | 'duplicate' | 'prerequisite' | 'example-of';
 
 export interface Link {
   id: ID;

@@ -35,7 +35,10 @@ function dumbbell(deg) {
   const t = (cy - NECK) / (0.75 * Math.cos(phi));
   const tx = t * Math.sin(phi);
   const ty = t * Math.cos(phi);
-  const pt = (x, y) => P(R_IN + x, y).map(f).join(' ');
+  const pt = (x, y) =>
+    P(R_IN + x, y)
+      .map(f)
+      .join(' ');
   return [
     `M ${pt(cx, cy)}`,
     `C ${pt(cx + tx, cy - ty)}, ${pt(L - cx - tx, cy - ty)}, ${pt(L - cx, cy)}`,
@@ -50,7 +53,10 @@ function droplet(deg) {
   const P = frame(deg);
   // Local x points outward; the tip sits inward of the circle centre.
   const alpha = Math.acos(r / DROP_TIP);
-  const pt = (x, y) => P(R_OUT + x, y).map(f).join(' ');
+  const pt = (x, y) =>
+    P(R_OUT + x, y)
+      .map(f)
+      .join(' ');
   const t1 = [-r * Math.cos(alpha), r * Math.sin(alpha)];
   const t2 = [-r * Math.cos(alpha), -r * Math.sin(alpha)];
   return `M ${pt(-DROP_TIP, 0)} L ${pt(...t1)} A ${r} ${r} 0 1 0 ${pt(...t2)} Z`;

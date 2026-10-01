@@ -40,7 +40,16 @@ export function toJsonCanvas(ws: Workspace, questions: Question[], nodes: TrailN
   const box = (id: string) => placed.get(id)!;
 
   const g = box('goal');
-  out.push({ id: 'goal', type: 'text', x: g.x, y: g.y, width: g.w, height: g.h, color: '5', text: `# ${ws.goal || ws.name}` });
+  out.push({
+    id: 'goal',
+    type: 'text',
+    x: g.x,
+    y: g.y,
+    width: g.w,
+    height: g.h,
+    color: '5',
+    text: `# ${ws.goal || ws.name}`,
+  });
 
   questions.forEach((q, i) => {
     const b = box(q.id);
@@ -59,7 +68,15 @@ export function toJsonCanvas(ws: Workspace, questions: Question[], nodes: TrailN
   });
 
   if (parking) {
-    out.push({ id: 'parking', type: 'group', x: parking.x, y: parking.y, width: parking.w, height: parking.h, label: 'Parking lot' });
+    out.push({
+      id: 'parking',
+      type: 'group',
+      x: parking.x,
+      y: parking.y,
+      width: parking.w,
+      height: parking.h,
+      label: 'Parking lot',
+    });
   }
 
   for (const n of nodes) {
@@ -75,7 +92,12 @@ export function toJsonCanvas(ws: Workspace, questions: Question[], nodes: TrailN
       }
       const qid = n.attach?.questionId;
       if (qid && placed.has(qid)) {
-        edges.push({ id: `e-${qid}-${n.id}`, fromNode: qid, toNode: n.id, label: n.attach!.state === 'suggested' ? 'suggested' : undefined });
+        edges.push({
+          id: `e-${qid}-${n.id}`,
+          fromNode: qid,
+          toNode: n.id,
+          label: n.attach!.state === 'suggested' ? 'suggested' : undefined,
+        });
       }
       if (n.prov.openerId && placed.has(n.prov.openerId)) {
         edges.push({ id: `e-open-${n.id}`, fromNode: n.prov.openerId, toNode: n.id, label: 'opened from', color: '5' });
@@ -89,12 +111,25 @@ export function toJsonCanvas(ws: Workspace, questions: Question[], nodes: TrailN
 
   for (const l of links) {
     if (l.state === 'rejected' || !placed.has(l.from) || !placed.has(l.to)) continue;
-    edges.push({ id: l.id, fromNode: l.from, toNode: l.to, label: l.type, color: l.type === 'contradicts' ? '1' : l.type === 'supports' ? '4' : undefined });
+    edges.push({
+      id: l.id,
+      fromNode: l.from,
+      toNode: l.to,
+      label: l.type,
+      color: l.type === 'contradicts' ? '1' : l.type === 'supports' ? '4' : undefined,
+    });
   }
   for (const q of questions) {
     const c = q.conflict;
     if (c?.verdict === 'conflict' && c.nodeIds.length === 2 && placed.has(c.nodeIds[0]) && placed.has(c.nodeIds[1])) {
-      edges.push({ id: `conflict-${q.id}`, fromNode: c.nodeIds[0], toNode: c.nodeIds[1], label: 'disagree', color: '1', toEnd: 'none' });
+      edges.push({
+        id: `conflict-${q.id}`,
+        fromNode: c.nodeIds[0],
+        toNode: c.nodeIds[1],
+        label: 'disagree',
+        color: '1',
+        toEnd: 'none',
+      });
     }
   }
   return { nodes: out, edges };

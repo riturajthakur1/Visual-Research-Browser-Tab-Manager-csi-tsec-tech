@@ -23,7 +23,10 @@ describe('coverageFor', () => {
   });
 
   it('counts gov.in subdomains of different bodies as different sites', () => {
-    const c = coverageFor(q, [page('https://mcgm.gov.in/a'), page('https://imd.gov.in/b')], { ...ws, settings: { ...ws.settings, requireHighlight: false } });
+    const c = coverageFor(q, [page('https://mcgm.gov.in/a'), page('https://imd.gov.in/b')], {
+      ...ws,
+      settings: { ...ws.settings, requireHighlight: false },
+    });
     expect(c.status).toBe('covered');
   });
 
@@ -49,7 +52,13 @@ describe('coverageFor', () => {
     const ps = [page('https://a.com/1'), page('https://b.org/2')];
     const conflicted = {
       ...q,
-      conflict: { verdict: 'conflict' as const, explanation: 'Rainfall figures differ', nodeIds: [ps[0].id, ps[1].id], signature: sourceSignature(ps), checkedAt: 0 },
+      conflict: {
+        verdict: 'conflict' as const,
+        explanation: 'Rainfall figures differ',
+        nodeIds: [ps[0].id, ps[1].id],
+        signature: sourceSignature(ps),
+        checkedAt: 0,
+      },
     };
     expect(coverageFor(conflicted, ps, ws).status).toBe('conflict');
     expect(coverageFor(conflicted, [...ps, page('https://c.net/3')], ws).status).not.toBe('conflict');

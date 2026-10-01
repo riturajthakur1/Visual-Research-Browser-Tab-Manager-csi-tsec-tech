@@ -96,7 +96,9 @@ const loaded = running.map((m) => m.identifier ?? m.modelKey);
 for (const m of running) {
   const id = m.identifier ?? m.modelKey;
   if (m.type === 'embedding') continue;
-  console.log(id === llm ? `  reloading ${id} with a ${CONTEXT}-token context` : `  unloading ${id} to free GPU memory`);
+  console.log(
+    id === llm ? `  reloading ${id} with a ${CONTEXT}-token context` : `  unloading ${id} to free GPU memory`,
+  );
   lms('unload', id);
 }
 console.log(`Loading ${llm} (context ${CONTEXT}, GPU max)…`);
