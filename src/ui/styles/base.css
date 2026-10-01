@@ -36,8 +36,9 @@
   --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
 }
 
+/* Dark theme: follows the system unless a theme is forced with data-theme on <html>. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #14100e;
     --surface: #1d1815;
     --surface-2: #26201c;
@@ -66,6 +67,42 @@
     --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
     --shadow-2: 0 8px 24px rgb(0 0 0 / 45%);
   }
+}
+
+:root[data-theme='dark'] {
+  --bg: #14100e;
+  --surface: #1d1815;
+  --surface-2: #26201c;
+  --surface-3: #312924;
+  --border: #3a312b;
+  --border-strong: #4d423a;
+  --ink: #f3ece5;
+  --ink-2: #c4b8ad;
+  --ink-3: #8f8379;
+  --brand: #f0503f;
+  --brand-2: #c8160c;
+  --brand-soft: #3a1714;
+  --on-brand: #1a0f0d;
+  --primary: #f3ece5;
+  --on-primary: #1a1412;
+
+  --gap: #f06a5f;
+  --gap-bg: #3b1a17;
+  --thin: #e3a83a;
+  --thin-bg: #382a12;
+  --covered: #4cc28a;
+  --covered-bg: #15301f;
+  --conflict: #b38af0;
+  --conflict-bg: #2b1f3d;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-2: 0 8px 24px rgb(0 0 0 / 45%);
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 *,

@@ -1,0 +1,118 @@
+/* Playground chrome only; the app's own styles come from src/ui. */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+.pg {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.pg-loading {
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+}
+.pg-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 8px 14px;
+  background: #17120f;
+  color: #f3ece5;
+  font-size: 12.5px;
+}
+.pg-sep {
+  width: 1px;
+  height: 18px;
+  background: #3a312b;
+}
+.pg-spacer {
+  flex: 1;
+}
+.pg-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c4b8ad;
+}
+.pg-field select {
+  background: #26201c;
+  color: #f3ece5;
+  border: 1px solid #3a312b;
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+.pg-seg {
+  display: inline-flex;
+  border: 1px solid #3a312b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pg-seg button {
+  background: transparent;
+  color: #c4b8ad;
+  border: none;
+  padding: 3px 9px;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+.pg-seg button.on {
+  background: #f3ece5;
+  color: #17120f;
+}
+.pg-reset {
+  background: #c8160c;
+  color: #fff8f2;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pg-main {
+  display: flex;
+  min-height: 0;
+  background: var(--bg);
+}
+.pg-main.view-panel {
+  justify-content: center;
+  background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 10px, var(--bg) 10px, var(--bg) 20px);
+}
+.pg-panel {
+  flex: none;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  box-shadow: var(--shadow-2);
+}
+.pg-panel .panel {
+  min-height: 100%;
+}
+.pg-map {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.pg-map .map-shell {
+  height: 100%;
+}
+.pg-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  max-width: 560px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #17120f;
+  color: #f3ece5;
+  font-size: 13px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
+  z-index: 100;
+}
