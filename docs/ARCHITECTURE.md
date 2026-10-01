@@ -88,6 +88,23 @@ Per-model constants live in `core/ai/embed.ts`. They were measured on `tests/fix
 
 References are built only from page metadata. The model drafts one to four findings per question from summaries, highlights and notes, and each finding must cite reference numbers it was given. Uncited findings and invalid numbers are dropped. Without a model, the brief lists summaries and highlights with their citations.
 
+### 8. Live team research (`core/collab`, `background/collab.ts`, `collab-server`)
+
+```
+IndexedDB ⇄ three-way merge ⇄ Yjs document ⇄ AES-GCM ⇄ relay ⇄ AES-GCM ⇄ Yjs ⇄ merge ⇄ teammate's IndexedDB
+```
+
+- **Sharing** gives the workspace a link: relay address, room (the workspace id) and a random 256-bit key. The invite code packs all three, so the key never travels anywhere except inside the code.
+- **The relay** (`collab-server/server.mjs`, about 160 lines on `ws`) forwards updates to everyone else in the room and keeps an append-only log so late joiners catch up. Clients compact the log into one snapshot when it grows. Every update and presence message is encrypted before it leaves the browser, so the relay stores and forwards ciphertext only. A test checks its log for plaintext.
+- **The session** (`core/collab/session.ts`) runs in the service worker, one per shared workspace. Its open WebSocket and 15-second presence heartbeat keep the worker alive.
+- **Merging.** A live query on the workspace triggers a merge. Each merge re-reads IndexedDB and walks every record against the shared Yjs document and the _base_ (the last version both sides agreed on):
+  - **Field by field.** A field changed on one side wins; a field changed on both sides goes to the newer record. A teammate editing a page's notes never undoes your filing of it.
+  - **Deletions.** A record missing on one side that has a base was deleted there; without a base, it is new.
+  - **One at a time.** Merges and incoming updates run one at a time on fresh reads, so a teammate's update can't be mistaken for a deletion.
+- **What stays local.** Tab state (open, hibernated), visit counts and reading time; the workspace's viewport, hibernated tabs and sharing key. Questions, pages (including filings, highlights, notes and tags), links, rules, claims and the workspace's goal, name and settings are shared.
+- **Offline.** The Yjs document and the bases are saved in IndexedDB (`sync` table). Edits made offline merge on reconnect; the handshake sends only what the room is missing.
+- **People.** Each browser has a profile (id, name, colour). Captures record `foundBy`; questions can carry `claimedBy`; presence lists who is online.
+
 ## Data model
 
 | Table        | Holds                                                                                                                                          |
@@ -99,6 +116,7 @@ References are built only from page metadata. The model drafts one to four findi
 | `rules`      | "never file this page under this question"                                                                                                     |
 | `events`     | append-only log used for replay                                                                                                                |
 | `vectors`    | embedding cache keyed by model and text hash                                                                                                   |
+| `sync`       | per shared workspace: the saved Yjs document and the merge bases                                                                               |
 
 ## Security and privacy
 
@@ -106,3 +124,4 @@ References are built only from page metadata. The model drafts one to four findi
 - Page text is treated as data: hidden text is stripped, prompts say so, and outputs are schema-constrained.
 - The extension never acts on pages; it only reads them.
 - Model traffic goes only to `localhost` (Bionic) or stays inside the browser.
+- Shared research is end-to-end encrypted (AES-GCM, 256-bit key from the invite code); the relay sees room ids and message sizes, never content.

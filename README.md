@@ -28,10 +28,21 @@ Research means 40 tabs and no memory of why half of them are open. Browsers now 
 | **Cited brief**              | Findings per question, each citing numbered references. References come only from page metadata, never from the model.                                         |
 | **Close tabs without fear**  | Hibernate closes a research session's tabs; restore brings them back exactly.                                                                                  |
 | **Open export**              | Markdown brief, JSON Canvas for Obsidian, PNG, and a full JSON backup.                                                                                         |
+| **Research together**        | Share a route live with teammates: their pages appear as they browse, each page shows who found it, and anyone can claim a gap. End-to-end encrypted.          |
 
 **Any language:** goals, questions, briefs and matching work across languages. A Hindi question matches an English article, and a Marathi page files under a Hindi route. Scripts include Devanagari, Arabic (right to left), CJK and more.
 
 **Private by design:** models run in [Bionic](https://lmstudio.ai) or inside the browser. Nothing leaves the computer. Private windows, sign-in pages, banking, mail and health sites are never recorded. The AI only reads and labels; it never clicks, types or submits.
+
+## Guides
+
+| Guide                                            | For                                                                                       |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [docs/SETUP-MAC.md](docs/SETUP-MAC.md)           | Setting up on a Mac from scratch, including Bionic, Chrome's built-in model and the relay |
+| [docs/UI-GUIDE.md](docs/UI-GUIDE.md)             | Redesigning the interface: screens → files, design tokens, rules to keep                  |
+| [docs/DEMO-VIDEO-MAC.md](docs/DEMO-VIDEO-MAC.md) | Recording and editing the demo video on a Mac, with a checklist of every feature          |
+| [docs/DEMO.md](docs/DEMO.md)                     | The live pitch, the three-minute demo and answers to judges' questions                    |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)     | How it works inside                                                                       |
 
 ## Quick start
 
@@ -68,9 +79,18 @@ Thread.io tries each tier in order and keeps working if one is missing.
 
 Everything is configurable in **Settings**: engine, chat model, embedding model, whether the model may "think" first (slower, sometimes better), and the server URL.
 
+## Live team research
+
+```bash
+npm run collab:server   # relay on ws://localhost:4545 and your LAN address
+```
+
+In the side panel: **Research together → Share live & copy invite**. Teammates paste the code under **+ New research… → Joining a teammate?**. The relay only forwards and stores encrypted updates; the key exists only inside invite codes. Run the relay on any laptop on the same Wi-Fi, or deploy `collab-server/server.mjs` to any Node host.
+
 ## Development
 
 ```bash
+npm run ui           # UI playground: side panel and map on sample data, hot reload, no extension needed
 npm run dev          # rebuilds dist/ on change; reload the extension to pick it up
 npm run typecheck
 npm test             # unit tests (live Bionic tests run when the server is up)
@@ -78,31 +98,32 @@ npm run test:e2e     # builds, then drives the real extension in Chromium
 npm run format
 ```
 
-The end-to-end test loads `dist/` into Chromium and runs the whole loop on an offline copy of the web: draft a route, browse search results, open linked pages, fill a gap, check the map and outline, write the brief, then hibernate and restore. It captures no screenshots or traces unless you opt in with `E2E_SCREENSHOTS=1` or `E2E_TRACE=1`.
+The end-to-end tests load `dist/` into Chromium and run the whole loop on an offline copy of the web: draft a route, browse search results, open linked pages, fill a gap, check the map and outline, write the brief, hibernate and restore. A second test runs two browsers sharing a route through a relay. It captures no screenshots or traces unless you opt in with `E2E_SCREENSHOTS=1` or `E2E_TRACE=1`.
 
 ## Project layout
 
 ```
 public/            manifest, icons; models/ and ort/ are downloaded by `npm run models`
 scripts/           model download, Bionic setup, logo and icon generation
+collab-server/     relay for live team research (encrypted; never sees content)
 src/
   background/      service worker: trail capture, page reading, tabs, job queue
   offscreen/       hosts the in-browser embedding model
   core/            framework-free logic shared by every surface (unit-tested)
     ai/            Bionic, built-in browser AI and embedding clients
+    collab/        encryption, invite codes, three-way merge, live sync session
     engine/        matching, coverage, routes, conflicts, proposals, replay
     export/        cited brief, JSON Canvas
   ui/
     sidepanel/     the Research GPS panel
     map/           the canvas, drawer, outline and replay
     components/    shared React components
+  playground/      UI playground: sample data and a stand-in for the extension APIs
 tests/
   unit/            engine tests, including multilingual and live-model checks
-  e2e/             Playwright test of the built extension
-docs/              architecture notes and the demo script
+  e2e/             Playwright tests of the built extension, including two-browser collaboration
+docs/              guides: Mac setup, UI, demo video, pitch, architecture
 ```
-
-More detail is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The pitch and three-minute demo are in [docs/DEMO.md](docs/DEMO.md).
 
 ## Team
 
