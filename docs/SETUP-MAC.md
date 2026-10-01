@@ -91,6 +91,14 @@ Read [UI-GUIDE.md](UI-GUIDE.md) next: it maps every screen to its file and lists
 
 ## 5. Run the real extension in Chrome
 
+**Quickest:** one command installs the packages, downloads the offline model, builds, and opens Chrome's Extensions page with the steps to finish:
+
+```bash
+npm run install:mac
+```
+
+It installs into `~/Library/Application Support/Thread.io/Extension`. Run it again after pulling changes to update; your research is kept. The steps below do the same by hand.
+
 Download the offline language model (about 145 MB, once):
 
 ```bash
