@@ -17,7 +17,8 @@
     "icons": "node scripts/make-logo.mjs && node scripts/make-icons.mjs",
     "setup": "npm run models && npm run bionic",
     "collab:server": "node collab-server/server.mjs",
-    "ui": "vite --open /playground.html"
+    "ui": "vite --open /playground.html",
+    "demo:record": "node scripts/record-demo.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.0",

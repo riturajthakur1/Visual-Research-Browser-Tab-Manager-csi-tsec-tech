@@ -12,13 +12,16 @@ import { MapApp } from '../ui/map/MapApp';
 import { App as SidePanel } from '../ui/sidepanel/App';
 import { playgroundState } from './mock-chrome';
 import { sampleTeamStatus, seedSample } from './sample';
+import { SimBrowser } from './SimBrowser';
 
-type View = 'panel' | 'map' | 'both';
+type View = 'panel' | 'map' | 'both' | 'browse';
 type Theme = 'system' | 'light' | 'dark';
 type Team = 'live' | 'offline' | 'solo';
 
 const PREFS = 'thread-io-playground:prefs';
 const SAMPLE_WS = 'ws_sample_mumbai';
+const VIEWS: View[] = ['panel', 'map', 'both', 'browse'];
+const asked = new URLSearchParams(location.search).get('view') as View | null;
 const saved = (() => {
   try {
     return JSON.parse(localStorage.getItem(PREFS) ?? '{}') as Partial<{ view: View; theme: Theme; width: number }>;
@@ -33,7 +36,7 @@ const seedOnce = () => (seeding ??= db.workspaces.get(SAMPLE_WS).then((ws) => (w
 
 function Playground() {
   const [ready, setReady] = useState(false);
-  const [view, setView] = useState<View>(saved.view ?? 'both');
+  const [view, setView] = useState<View>(asked && VIEWS.includes(asked) ? asked : (saved.view ?? 'both'));
   const [theme, setTheme] = useState<Theme>(saved.theme ?? 'system');
   const [width, setWidth] = useState(saved.width ?? 400);
   const [ai, setAi] = useState(true);
@@ -46,7 +49,8 @@ function Playground() {
       setToast(m);
       setTimeout(() => setToast((t) => (t === m ? '' : t)), 3500);
     };
-    playgroundState.showMap = () => setView((v) => (v === 'panel' ? 'map' : v));
+    playgroundState.showMap = () => setView((v) => (v === 'panel' || v === 'browse' ? 'map' : v));
+    playgroundState.showBrowser = () => setView((v) => (playgroundState.browse ? 'browse' : v));
     void (async () => {
       await seedOnce();
       setReady(true);
@@ -63,6 +67,14 @@ function Playground() {
     playgroundState.aiOnline = ai;
     setEpoch((e) => e + 1); // remount so the AI status is read again
   }, [ai]);
+
+  // From the first visit to Browse on, tabs are simulated and the AI status is real.
+  const browsing = view === 'browse' || playgroundState.browse;
+  useEffect(() => {
+    if (view !== 'browse' || playgroundState.browse) return;
+    playgroundState.browse = true;
+    setEpoch((e) => e + 1);
+  }, [view]);
 
   useEffect(() => {
     if (!ready) return;
@@ -87,7 +99,7 @@ function Playground() {
         <img src="/icons/icon32.png" width={20} height={20} alt="" />
         <strong>Thread.io UI playground</strong>
         <span className="pg-sep" />
-        <Segmented label="View" value={view} options={['panel', 'map', 'both']} onChange={setView} />
+        <Segmented label="View" value={view} options={VIEWS} onChange={setView} />
         {view !== 'map' && (
           <label className="pg-field">
             Panel
@@ -101,9 +113,18 @@ function Playground() {
           </label>
         )}
         <Segmented label="Theme" value={theme} options={['system', 'light', 'dark']} onChange={setTheme} />
-        <label className="pg-field">
-          <input type="checkbox" checked={ai} onChange={(e) => setAi(e.target.checked)} /> Local AI online
-        </label>
+        {browsing ? (
+          <span
+            className="pg-field"
+            title="Browse uses the real model check: Bionic on localhost:1234, started with --cors"
+          >
+            AI: real status
+          </span>
+        ) : (
+          <label className="pg-field">
+            <input type="checkbox" checked={ai} onChange={(e) => setAi(e.target.checked)} /> Local AI online
+          </label>
+        )}
         <label className="pg-field">
           Team
           <select value={team} onChange={(e) => setTeam(e.target.value as Team)}>
@@ -124,12 +145,17 @@ function Playground() {
         </button>
       </header>
       <main className={`pg-main view-${view}`} key={epoch}>
+        {view === 'browse' && (
+          <div className="pg-browser">
+            <SimBrowser onToast={playgroundState.toast} />
+          </div>
+        )}
         {view !== 'map' && (
           <div className="pg-panel" style={{ width }}>
             <SidePanel />
           </div>
         )}
-        {view !== 'panel' && (
+        {(view === 'map' || view === 'both') && (
           <div className="pg-map">
             <MapApp />
           </div>

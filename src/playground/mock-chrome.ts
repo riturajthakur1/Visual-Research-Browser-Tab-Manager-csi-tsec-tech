@@ -1,6 +1,7 @@
 // A stand-in for the extension APIs, so the side panel and map run in a normal
 // browser tab with hot reload. Only what the UI touches is implemented.
-// Requests the UI sends to the service worker are answered by `handleRequest`.
+// Requests the UI sends to the service worker are answered by `handleRequest`,
+// or, once the Browse view is open, by the simulated browser (sim-capture.ts).
 import type { AiStatus, BackgroundRequest } from '../core/messages';
 
 type Listener = (changes: Record<string, { oldValue?: unknown; newValue?: unknown }>, area: string) => void;
@@ -48,9 +49,17 @@ function area(name: 'local' | 'session') {
 
 export const playgroundState = {
   aiOnline: true,
+  /** The Browse view was opened: tabs are simulated and the real engine runs. */
+  browse: false,
   toast: (_message: string) => {},
   showMap: () => {},
+  showBrowser: () => {},
 };
+
+// Loaded on first use: it pulls in the capture code, which needs `chrome` to exist.
+const sim = () => import('./sim-capture');
+// Requests that open pages; the playground switches to the Browse view for them.
+const OPENS_PAGES = new Set(['gap.fill', 'node.open', 'url.open', 'nodes.sideBySide', 'workspace.restore']);
 
 const status = (): AiStatus => ({
   llm: playgroundState.aiOnline ? { provider: 'bionic', label: 'Bionic · google/gemma-4-e2b' } : null,
@@ -67,6 +76,12 @@ const status = (): AiStatus => ({
 });
 
 async function handleRequest(req: BackgroundRequest): Promise<unknown> {
+  if (playgroundState.browse) {
+    const { handleBrowseRequest, NOT_HANDLED } = await sim();
+    if (OPENS_PAGES.has(req.type)) playgroundState.showBrowser();
+    const value = await handleBrowseRequest(req);
+    if (value !== NOT_HANDLED) return value;
+  }
   const { updateSettings } = await import('../core/settings');
   const { db } = await import('../core/db');
   switch (req.type) {
@@ -144,6 +159,23 @@ const chromeMock = {
     request: async () => true,
     onAdded: noopEvent,
     onRemoved: noopEvent,
+  },
+  // Only the Browse view has tabs; these forward to its simulated browser.
+  tabs: {
+    get: async (id: number) => (await sim()).simChrome.tabs.get(id),
+    query: async (q?: { active?: boolean; url?: string }) => (await sim()).simChrome.tabs.query(q),
+    create: async (p: { url?: string; active?: boolean; pinned?: boolean }) => (await sim()).simChrome.tabs.create(p),
+    update: async (id: number, p: { url?: string; active?: boolean }) => (await sim()).simChrome.tabs.update(id, p),
+    remove: async (ids: number | number[]) => (await sim()).simChrome.tabs.remove(ids),
+  },
+  windows: {
+    update: async () => (await sim()).simChrome.windows.update(),
+    getLastFocused: async () => (await sim()).simChrome.windows.getLastFocused(),
+    create: async (p: { url?: string }) => (await sim()).simChrome.windows.create(p),
+  },
+  scripting: {
+    executeScript: async (opts: { target: { tabId: number }; func: () => unknown }) =>
+      (await sim()).simChrome.scripting.executeScript(opts),
   },
   commands: {
     getAll: async () => [

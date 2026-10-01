@@ -6,6 +6,7 @@ public/models/
 public/ort/
 test-results/
 playwright-report/
+recordings/
 .vite/
 *.log
 .DS_Store

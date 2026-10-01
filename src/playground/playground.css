@@ -116,3 +116,327 @@ body,
   box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
   z-index: 100;
 }
+
+/* Browse view: a simulated browser with the side panel docked on the right. */
+.pg-main.view-browse .pg-panel {
+  order: 2;
+  border-right: none;
+  border-left: 1px solid var(--border);
+  box-shadow: none;
+}
+.pg-browser {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.sim {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  background: var(--surface);
+  color: var(--ink);
+}
+.sim-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 6px 8px 0;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.sim-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 200px;
+  min-width: 48px;
+  padding: 7px 8px 7px 10px;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: default;
+  user-select: none;
+}
+.sim-tab:hover {
+  background: var(--surface-2);
+}
+.sim-tab.on {
+  background: var(--surface);
+  color: var(--ink);
+}
+.sim-tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sim-tab-close,
+.sim-newtab {
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+}
+.sim-newtab {
+  margin: 0 0 6px 4px;
+  width: 26px;
+  height: 26px;
+}
+.sim-tab-close:hover,
+.sim-newtab:hover {
+  background: var(--border);
+}
+.sim-favicon {
+  flex: none;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--border-strong);
+}
+.sim-favicon.loading {
+  border-radius: 50%;
+  background: none;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--brand);
+  animation: sim-spin 0.7s linear infinite;
+}
+@keyframes sim-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.sim-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sim-toolbar > button {
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+}
+.sim-toolbar > button:disabled {
+  color: var(--border-strong);
+  cursor: default;
+}
+.sim-address {
+  flex: 1;
+}
+.sim-address input {
+  width: 100%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+.sim-address input:focus {
+  outline: none;
+  border-color: var(--brand);
+  background: var(--surface);
+}
+.sim-ext {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+.sim-badge {
+  position: absolute;
+  right: -6px;
+  bottom: 0;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: #c8160c;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 13px;
+}
+.sim-content {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+}
+.sim-content.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+.sim-pane {
+  min-height: 0;
+  overflow: auto;
+  border-right: 1px solid var(--border);
+}
+.sim-pane-bar {
+  position: sticky;
+  top: 0;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sim-split-close {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+}
+.sim-empty {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-2);
+}
+.sim-start {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 18vh 24px 24px;
+  text-align: center;
+}
+.sim-start-logo {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.sim-searchbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(560px, 100%);
+  padding: 9px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-3);
+}
+.sim-searchbox input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+.sim-results {
+  padding: 20px 28px;
+  max-width: 720px;
+}
+.sim-results ol {
+  list-style: none;
+  padding: 0;
+  margin: 22px 0 0;
+  display: grid;
+  gap: 22px;
+}
+.sim-result-site {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.sim-result-title {
+  display: inline-block;
+  margin: 3px 0 4px;
+  font-size: 18px;
+  color: var(--primary);
+  text-decoration: none;
+}
+.sim-result-title:hover {
+  text-decoration: underline;
+}
+.sim-results p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.sim-article {
+  position: relative;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 32px 28px 64px;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.sim-article h1 {
+  font-size: 28px;
+  line-height: 1.25;
+  margin: 6px 0 8px;
+}
+.sim-article-site {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brand);
+}
+.sim-article-meta {
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.sim-article a {
+  color: var(--primary);
+}
+.sim-article mark {
+  background: #fde68a;
+  color: #17120f;
+}
+.sim-menu {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  min-width: 260px;
+  padding: 5px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  font-size: 13px;
+  line-height: 1.3;
+}
+.sim-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sim-menu button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.sim-menu button:disabled {
+  color: var(--ink-3);
+}
