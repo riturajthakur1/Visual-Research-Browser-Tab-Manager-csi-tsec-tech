@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
 }
 
 /* --- Header -------------------------------------------------------------------- */
@@ -9,16 +10,17 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
   border-bottom: 1px solid var(--border);
-  padding: 10px 14px 10px;
+  padding: 10px 14px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .logo {
-  border-radius: 6px;
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgb(30 23 20 / 12%);
 }
 .brand-name {
   font-size: 15px;
@@ -28,15 +30,21 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   max-width: 150px;
   height: 26px;
   padding: 0 10px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
+  box-shadow: var(--highlight);
   font-size: 12px;
   color: var(--ink-2);
   cursor: pointer;
+  transition: border-color 0.18s var(--ease);
+}
+.ai-chip .truncate {
+  min-width: 0;
 }
 .ai-chip:hover {
   border-color: var(--border-strong);
@@ -50,9 +58,10 @@
 .ws-select {
   flex: 1;
   min-width: 0;
-  height: 32px;
-  padding: 4px 8px;
+  height: 34px;
+  padding: 4px 10px;
   font-weight: 600;
+  box-shadow: var(--highlight);
 }
 .rec {
   display: inline-flex;
@@ -82,7 +91,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   background: var(--thin-bg);
   color: var(--ink);
   font-size: 12px;
@@ -90,7 +99,7 @@
 
 .panel-body {
   flex: 1;
-  padding: 14px;
+  padding: 16px 14px 14px;
 }
 
 h1 {
@@ -109,7 +118,7 @@ p {
 .eyebrow {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -142,6 +151,7 @@ p {
   text-align: center;
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
+  color: var(--ink-2);
 }
 
 /* --- Goal setup ------------------------------------------------------------------ */
@@ -169,8 +179,8 @@ p {
 }
 .chip.example {
   text-align: start;
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  border-radius: 12px;
+  padding: 7px 12px;
   font-size: 12.5px;
   background: var(--surface);
   border-color: var(--border);
@@ -250,22 +260,27 @@ p {
   color: var(--ink);
   font-size: 12px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .qnum.gap {
   background: var(--gap);
   color: #fff;
+  box-shadow: 0 0 0 3px var(--gap-bg);
 }
 .qnum.thin {
   background: var(--thin);
   color: #fff;
+  box-shadow: 0 0 0 3px var(--thin-bg);
 }
 .qnum.covered {
   background: var(--covered);
   color: #fff;
+  box-shadow: 0 0 0 3px var(--covered-bg);
 }
 .qnum.conflict {
   background: var(--conflict);
   color: #fff;
+  box-shadow: 0 0 0 3px var(--conflict-bg);
 }
 .qnum-btn {
   border: none;
@@ -290,21 +305,22 @@ p {
 }
 .coverage .strip {
   display: flex;
-  gap: 3px;
-  height: 10px;
+  gap: 4px;
+  height: 8px;
+  margin-top: 4px;
 }
 .coverage .seg {
   flex: 1;
   border: none;
-  border-radius: 3px;
+  border-radius: 999px;
   padding: 0;
   cursor: pointer;
   transition:
-    transform 0.15s,
+    transform 0.2s var(--ease),
     background 0.4s;
 }
 .coverage .seg:hover {
-  transform: scaleY(1.4);
+  transform: scaleY(1.5);
 }
 .seg.gap {
   background: var(--gap);
@@ -319,23 +335,27 @@ p {
   background: var(--conflict);
 }
 .coverage-legend {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 12px;
   color: var(--ink-2);
-  gap: 12px;
+  gap: 4px 12px;
+  flex-wrap: wrap;
 }
 .legend-item {
   gap: 5px;
+  white-space: nowrap;
 }
 .next {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
-  border-left: 3px solid var(--gap);
+  padding: 14px;
+  border-color: color-mix(in srgb, var(--gap) 22%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gap-bg) 70%, var(--surface)), var(--surface) 70%);
 }
 .next.done {
-  border-left-color: var(--covered);
+  border-color: color-mix(in srgb, var(--covered) 22%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--covered-bg) 70%, var(--surface)), var(--surface) 70%);
 }
 .next p {
   font-weight: 550;
@@ -345,11 +365,12 @@ p {
   max-width: 100%;
 }
 .proposal {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-left: 3px solid var(--brand);
+  border-color: color-mix(in srgb, var(--brand) 20%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 60%, var(--surface)), var(--surface) 70%);
 }
 .proposal-text {
   font-weight: 600;
@@ -358,7 +379,7 @@ p {
 .explore-status {
   display: flex;
   gap: 10px;
-  padding: 12px;
+  padding: 14px;
 }
 
 .questions {
@@ -370,27 +391,21 @@ p {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--highlight), var(--shadow-1);
   overflow: hidden;
   scroll-margin-top: 110px;
+  transition:
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
-.qcard.status-gap {
-  border-left: 3px solid var(--gap);
-}
-.qcard.status-thin {
-  border-left: 3px solid var(--thin);
-}
-.qcard.status-covered {
-  border-left: 3px solid var(--covered);
-}
-.qcard.status-conflict {
-  border-left: 3px solid var(--conflict);
+.qcard:hover {
+  border-color: var(--border-strong);
 }
 .qcard-head {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 8px 10px 10px;
+  padding: 14px 6px 12px 12px;
 }
 .qcard-title {
   flex: 1;
@@ -400,6 +415,7 @@ p {
   font-size: 14px;
   font-weight: 650;
   line-height: 1.35;
+  letter-spacing: -0.005em;
   cursor: text;
 }
 .qcard-meta {
@@ -410,15 +426,16 @@ p {
 .qcard-tools {
   display: flex;
   flex-direction: column;
-  opacity: 0.45;
-  transition: opacity 0.15s;
+  margin-top: -4px;
+  opacity: 0.4;
+  transition: opacity 0.18s var(--ease);
 }
 .qcard:hover .qcard-tools,
 .qcard:focus-within .qcard-tools {
   opacity: 1;
 }
 .qcard-body {
-  padding: 0 10px 10px 42px;
+  padding: 2px 12px 14px 44px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -435,6 +452,8 @@ p {
 }
 .search-chip {
   max-width: 100%;
+  height: 26px;
+  padding: 0 10px;
   background: var(--surface);
   border-color: var(--border);
 }
@@ -442,8 +461,9 @@ p {
   opacity: 0.6;
 }
 .conflict-box {
-  padding: 10px;
-  border-radius: var(--radius-sm);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--conflict) 18%, transparent);
   background: var(--conflict-bg);
   color: var(--ink);
   display: flex;
@@ -453,6 +473,9 @@ p {
 }
 .conflict-box strong {
   color: var(--conflict);
+}
+.conflict-box .row {
+  flex-wrap: wrap;
 }
 
 /* --- Page rows ------------------------------------------------------------------------ */
@@ -465,13 +488,17 @@ p {
   gap: 6px;
 }
 .page-row {
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 1px solid transparent;
+  padding: 10px 12px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-2) 75%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   display: flex;
   flex-direction: column;
   gap: 3px;
+  transition: border-color 0.18s var(--ease);
+}
+.page-row:hover {
+  border-color: var(--border);
 }
 .page-row.suggested {
   background: transparent;
@@ -521,8 +548,9 @@ p {
   color: var(--ink);
 }
 .page-actions {
-  gap: 4px;
-  padding-left: 18px;
+  gap: 2px;
+  margin-top: 3px;
+  padding-left: 14px;
   flex-wrap: wrap;
 }
 .small-select {
@@ -544,14 +572,14 @@ p {
   padding: 0 6px;
 }
 .favicon {
-  border-radius: 3px;
+  border-radius: 4px;
   flex: none;
 }
 .favicon-fallback {
   display: inline-grid;
   place-items: center;
   flex: none;
-  border-radius: 4px;
+  border-radius: 5px;
   background: var(--surface-3);
   color: var(--ink-2);
   font-weight: 700;
@@ -566,12 +594,28 @@ p {
   bottom: 0;
   display: flex;
   gap: 6px;
-  padding: 10px 0 4px;
+  padding: 14px 0 6px;
   margin-top: 8px;
-  background: linear-gradient(transparent, var(--bg) 25%);
+  background: linear-gradient(transparent, var(--bg) 40%);
 }
 .panel-footer .btn:not(.icon) {
   flex: 1;
+  min-width: 0;
+}
+/* Narrow panels: tighter footer buttons so all four stay on screen. */
+@container (max-width: 380px) {
+  .panel-footer {
+    gap: 4px;
+  }
+  .panel-footer .btn:not(.icon) {
+    padding: 0 8px;
+    gap: 4px;
+  }
+}
+@container (max-width: 340px) {
+  .panel-footer .btn:not(.icon) svg {
+    display: none;
+  }
 }
 
 /* --- Brief --------------------------------------------------------------------- */
@@ -581,7 +625,7 @@ p {
   gap: 10px;
 }
 .brief-options {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -647,6 +691,7 @@ p {
 }
 .group {
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 12px 14px 14px;
   margin: 0;
   display: flex;
@@ -668,7 +713,7 @@ p {
   align-items: flex-start;
   padding: 8px 10px;
   background: var(--surface-2);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   font-size: 12.5px;
 }
 .toggle-row {
@@ -679,25 +724,33 @@ p {
 }
 .segmented {
   display: flex;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 .segmented button {
   flex: 1;
   border: none;
-  background: var(--surface);
-  padding: 6px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  padding: 5px 10px;
   cursor: pointer;
   font-weight: 600;
   font-size: 12.5px;
+  transition:
+    background 0.18s var(--ease),
+    color 0.18s var(--ease);
 }
-.segmented button + button {
-  border-left: 1px solid var(--border);
+.segmented button:hover {
+  color: var(--ink);
 }
 .segmented button.on {
   background: var(--primary);
   color: var(--on-primary);
+  box-shadow: 0 1px 3px rgb(30 23 20 / 18%);
 }
 .input.narrow {
   width: 80px;
@@ -765,10 +818,11 @@ kbd {
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: start;
   cursor: pointer;
   color: var(--ink);
+  transition: border-color 0.18s var(--ease);
 }
 .team-cta:hover {
   border-color: var(--border-strong);
@@ -777,7 +831,7 @@ kbd {
   flex: 1;
 }
 .team {
-  padding: 10px 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -821,7 +875,7 @@ kbd {
   font-size: 13px;
 }
 .join {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -853,7 +907,7 @@ kbd {
 code {
   font-family: var(--mono);
   font-size: 0.92em;
-  padding: 1px 4px;
-  border-radius: 4px;
+  padding: 1px 5px;
+  border-radius: 6px;
   background: var(--surface-2);
 }

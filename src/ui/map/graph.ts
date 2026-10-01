@@ -1,7 +1,7 @@
 // Turns workspace data into React Flow nodes and edges.
 import type { Edge, Node } from '@xyflow/react';
 import type { QuestionCoverage } from '../../core/engine/coverage';
-import { layoutMap } from '../../core/layout';
+import { SIZE, layoutMap } from '../../core/layout';
 import type { CoverageStatus, Link, Question, TrailNode, Workspace } from '../../core/types';
 
 export interface GraphOptions {
@@ -182,6 +182,27 @@ export function buildGraph(
         data: { kind: 'conflict' },
       });
     }
+  }
+
+  // Labels sit at the midpoint, so two labelled edges between the same cards would
+  // print on top of each other. Show them as one label on the edge drawn last.
+  const labelled = new Map<string, Edge[]>();
+  for (const e of edges) {
+    if (!e.label) continue;
+    const pair = [e.source, e.target].sort().join('|');
+    labelled.set(pair, [...(labelled.get(pair) ?? []), e]);
+  }
+  for (const group of labelled.values()) {
+    if (group.length < 2) continue;
+    const label = group.map((e) => e.label).join(' · ');
+    group.forEach((e, i) => (e.label = i === group.length - 1 ? label : undefined));
+  }
+
+  // Nodes are controlled, so React Flow's measurements never reach them; without a size
+  // the minimap skips every node. The layout size stands in until the real one is known.
+  for (const n of rf) {
+    const size = SIZE[n.type as keyof typeof SIZE];
+    if (size) Object.assign(n, { initialWidth: size.w, initialHeight: size.h });
   }
 
   return { nodes: rf, edges };

@@ -347,6 +347,7 @@ function MapScreen() {
               <MiniMap
                 pannable
                 zoomable
+                nodeBorderRadius={14}
                 maskColor="color-mix(in srgb, var(--bg) 70%, transparent)"
                 bgColor="var(--surface)"
                 nodeColor={(n) => {

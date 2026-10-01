@@ -26,10 +26,14 @@
   --conflict: #7b4bc0;
   --conflict-bg: #efe6fa;
 
-  --shadow-1: 0 1px 2px rgb(30 23 20 / 6%), 0 1px 1px rgb(30 23 20 / 4%);
-  --shadow-2: 0 6px 20px rgb(30 23 20 / 10%), 0 2px 6px rgb(30 23 20 / 6%);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --shadow-1: 0 1px 2px rgb(30 23 20 / 5%), 0 2px 8px -2px rgb(30 23 20 / 6%);
+  --shadow-2: 0 12px 32px -8px rgb(30 23 20 / 16%), 0 2px 6px rgb(30 23 20 / 5%);
+  /* Light catching the top edge of a raised surface. */
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 75%);
+  --radius-lg: 20px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --font:
     'Inter', system-ui, -apple-system, 'Segoe UI', 'Noto Sans', 'Nirmala UI', 'Noto Sans Devanagari',
     'Noto Sans Arabic', 'Noto Sans CJK SC', 'Microsoft YaHei', 'Meiryo', sans-serif;
@@ -64,8 +68,9 @@
     --conflict: #b38af0;
     --conflict-bg: #2b1f3d;
 
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
-    --shadow-2: 0 8px 24px rgb(0 0 0 / 45%);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 35%), 0 2px 8px -2px rgb(0 0 0 / 30%);
+    --shadow-2: 0 14px 36px -8px rgb(0 0 0 / 55%), 0 2px 6px rgb(0 0 0 / 30%);
+    --highlight: inset 0 1px 0 rgb(255 255 255 / 5%);
   }
 }
 
@@ -95,8 +100,9 @@
   --conflict: #b38af0;
   --conflict-bg: #2b1f3d;
 
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
-  --shadow-2: 0 8px 24px rgb(0 0 0 / 45%);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 35%), 0 2px 8px -2px rgb(0 0 0 / 30%);
+  --shadow-2: 0 14px 36px -8px rgb(0 0 0 / 55%), 0 2px 6px rgb(0 0 0 / 30%);
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 5%);
 }
 :root[data-theme='light'] {
   color-scheme: light;
@@ -151,19 +157,24 @@ a {
   justify-content: center;
   gap: 6px;
   height: 32px;
-  padding: 0 12px;
-  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
+  box-shadow:
+    var(--highlight),
+    0 1px 2px rgb(30 23 20 / 4%);
   color: var(--ink);
   font-weight: 550;
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   transition:
-    background 0.12s,
-    border-color 0.12s,
-    transform 0.06s;
+    background 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    opacity 0.18s var(--ease),
+    transform 0.08s;
 }
 .btn:hover {
   background: var(--surface-2);
@@ -189,17 +200,25 @@ a {
   background: var(--brand);
   color: var(--on-brand);
   border-color: var(--brand);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 4px 12px -4px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+.btn.brand:hover {
+  background: color-mix(in srgb, var(--brand) 90%, #000);
+  border-color: color-mix(in srgb, var(--brand) 90%, #000);
 }
 .btn.ghost {
   background: transparent;
   border-color: transparent;
+  box-shadow: none;
 }
 .btn.ghost:hover {
   background: var(--surface-2);
 }
 .btn.small {
   height: 26px;
-  padding: 0 8px;
+  padding: 0 10px;
   font-size: 12px;
 }
 .btn.icon {
@@ -221,21 +240,30 @@ a {
   border: 1px solid var(--border);
   background: var(--surface);
   border-radius: var(--radius-sm);
-  padding: 7px 10px;
+  padding: 7px 11px;
   outline: none;
   transition:
-    border-color 0.12s,
-    box-shadow 0.12s;
+    border-color 0.18s var(--ease),
+    box-shadow 0.18s var(--ease);
+}
+.input:hover,
+.textarea:hover,
+.select:hover {
+  border-color: var(--border-strong);
 }
 .input:focus,
 .textarea:focus,
-.select:focus {
+.select:focus,
+.input:focus:hover,
+.textarea:focus:hover,
+.select:focus:hover {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--brand-soft);
 }
 .textarea {
   resize: vertical;
   min-height: 64px;
+  border-radius: 14px;
 }
 .label {
   display: block;
@@ -306,7 +334,7 @@ a {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--highlight), var(--shadow-1);
 }
 
 .chip {
@@ -320,6 +348,10 @@ a {
   color: var(--ink-2);
   font-size: 12px;
   border: 1px solid transparent;
+  transition:
+    border-color 0.18s var(--ease),
+    color 0.18s var(--ease),
+    background 0.18s var(--ease);
 }
 button.chip {
   cursor: pointer;
@@ -369,7 +401,7 @@ button.chip:hover {
   background: var(--surface-3);
   border: none;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.2s var(--ease);
   padding: 0;
 }
 .switch::after {
@@ -381,8 +413,8 @@ button.chip:hover {
   height: 16px;
   border-radius: 50%;
   background: var(--surface);
-  box-shadow: var(--shadow-1);
-  transition: transform 0.15s;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
+  transition: transform 0.22s var(--ease);
 }
 .switch[aria-checked='true'] {
   background: var(--brand);
