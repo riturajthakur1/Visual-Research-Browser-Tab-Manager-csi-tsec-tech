@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Thread.io — Research GPS",
+  "short_name": "Thread.io",
+  "version": "0.1.0",
+  "description": "Set the question you need answered, browse normally, and every tab files itself under the sub-question it answers. Local-first.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Open Thread.io",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "tabs",
+    "webNavigation",
+    "storage",
+    "unlimitedStorage",
+    "sidePanel",
+    "scripting",
+    "offscreen",
+    "contextMenus"
+  ],
+  "host_permissions": ["http://localhost:1234/*", "http://127.0.0.1:1234/*"],
+  "optional_host_permissions": ["<all_urls>"],
+  "commands": {
+    "save-highlight": {
+      "suggested_key": { "default": "Alt+Shift+H" },
+      "description": "Save the selected text as evidence"
+    },
+    "toggle-recording": {
+      "suggested_key": { "default": "Alt+Shift+R" },
+      "description": "Start or pause recording"
+    },
+    "open-map": {
+      "suggested_key": { "default": "Alt+Shift+M" },
+      "description": "Open the research map"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "minimum_chrome_version": "116"
+}

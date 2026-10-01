@@ -1,0 +1,42 @@
+{
+  "name": "thread-io",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thread.io — a research GPS browser extension: set a goal, browse normally, and every tab files itself under the question it answers.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch --mode development",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "npm run build && playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "models": "node scripts/fetch-models.mjs",
+    "bionic": "node scripts/setup-bionic.mjs",
+    "icons": "node scripts/make-logo.mjs && node scripts/make-icons.mjs",
+    "setup": "npm run models && npm run bionic"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
+    "@xyflow/react": "^12.12.0",
+    "dexie": "^4.4.6",
+    "dexie-react-hooks": "^4.4.0",
+    "html-to-image": "^1.11.13",
+    "minisearch": "^7.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/chrome": "^0.3.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "fake-indexeddb": "^6.2.5",
+    "prettier": "^3.9.9",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.3"
+  }
+}

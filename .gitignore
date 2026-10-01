@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-*/
+*.zip
+public/models/
+public/ort/
+test-results/
+playwright-report/
+.vite/
+*.log
+.DS_Store
