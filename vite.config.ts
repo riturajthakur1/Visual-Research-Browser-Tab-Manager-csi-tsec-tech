@@ -1,21 +1,26 @@
+import { defaultClientConditions } from 'vite';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const src = resolve(__dirname, 'src');
+const src = resolve(import.meta.dirname, 'src');
 
 export default defineConfig(({ mode }) => {
-  if (!existsSync(resolve(__dirname, 'public/ort/ort-wasm-simd-threaded.asyncify.wasm'))) {
+  if (!existsSync(resolve(import.meta.dirname, 'public/ort/ort-wasm-simd-threaded.asyncify.wasm'))) {
     console.warn('\n[thread.io] public/ort is missing; run `npm run models` for the offline embedding fallback.\n');
   }
   return {
     root: src,
-    publicDir: resolve(__dirname, 'public'),
+    publicDir: resolve(import.meta.dirname, 'public'),
     base: './',
     plugins: [react()],
+    resolve: {
+      // ONNX Runtime's build that loads its WebAssembly from public/ort instead of bundling a second copy.
+      conditions: ['onnxruntime-web-use-extern-wasm', ...defaultClientConditions],
+    },
     build: {
-      outDir: resolve(__dirname, 'dist'),
+      outDir: resolve(import.meta.dirname, 'dist'),
       emptyOutDir: true,
       target: 'chrome116',
       sourcemap: mode === 'development' ? 'inline' : false,
@@ -39,7 +44,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     test: {
-      root: __dirname,
+      root: import.meta.dirname,
       include: ['tests/unit/**/*.test.ts'],
       environment: 'node',
       setupFiles: ['tests/unit/setup.ts'],

@@ -32,7 +32,8 @@
     "sidePanel",
     "scripting",
     "offscreen",
-    "contextMenus"
+    "contextMenus",
+    "activeTab"
   ],
   "host_permissions": ["http://localhost:1234/*", "http://127.0.0.1:1234/*"],
   "optional_host_permissions": ["<all_urls>"],
