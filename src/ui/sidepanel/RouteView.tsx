@@ -8,13 +8,14 @@ import { plural } from '../../core/util';
 import { Icon } from '../components/Icon';
 import { PageRow } from '../components/PageRow';
 import { Empty } from '../components/common';
-import type { useWorkspace } from '../hooks';
+import { useSettings, type useWorkspace } from '../hooks';
 import type { View } from './App';
 import { QuestionCard } from './QuestionCard';
 
 type Data = ReturnType<typeof useWorkspace>;
 
 export function RouteView({ data, onView }: { data: Data; onView: (v: View) => void }) {
+  const { recording } = useSettings();
   const ws = data.ws!;
   const questions = data.questions ?? [];
   const nodes = data.nodes ?? [];
@@ -166,6 +167,7 @@ export function RouteView({ data, onView }: { data: Data; onView: (v: View) => v
           >
             <Icon name="search" /> <span className="truncate">{nextSearch}</span>
           </button>
+          {!recording && <p className="hint">Recording is paused, so pages you open won’t be filed until you start it.</p>}
         </div>
       ) : counts.covered + counts.conflict === questions.length ? (
         <div className="next card done">
