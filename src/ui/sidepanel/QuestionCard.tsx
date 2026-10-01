@@ -61,7 +61,7 @@ export function QuestionCard({
           onClick={() => setOpen(!open)}
           title={open ? 'Collapse' : 'Expand'}
         >
-          <span className={`qnum ${coverage.status}`}>{index + 1}</span>
+          <span className={`qnum ${coverage.status}`}>Q{index + 1}</span>
         </button>
         <div className="qcard-title">
           {editing ? (

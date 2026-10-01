@@ -1,13 +1,6 @@
 // Edges that attach to the nearest side of each card, so the radial map stays
 // readable however the user drags things around.
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  getStraightPath,
-  useInternalNode,
-  type EdgeProps,
-  type InternalNode,
-} from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, useInternalNode, type EdgeProps, type InternalNode } from '@xyflow/react';
 
 function borderPoint(node: InternalNode, toward: InternalNode) {
   const w = (node.measured.width ?? 0) / 2;
@@ -30,7 +23,16 @@ export function FloatingEdge({ id, source, target, markerEnd, style, label }: Ed
   if (!s || !t) return null;
   const a = borderPoint(s, t);
   const b = borderPoint(t, s);
-  const [path, lx, ly] = getStraightPath({ sourceX: a.x, sourceY: a.y, targetX: b.x, targetY: b.y });
+  // A soft S-curve that leaves and enters each card square to its side.
+  const horizontal = Math.abs(b.x - a.x) > Math.abs(b.y - a.y);
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  const c1 = horizontal ? { x: mx, y: a.y } : { x: a.x, y: my };
+  const c2 = horizontal ? { x: mx, y: b.y } : { x: b.x, y: my };
+  const path = `M${a.x},${a.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${b.x},${b.y}`;
+  // Midpoint of the cubic (t = 0.5), so labels sit on the line.
+  const lx = (a.x + 3 * c1.x + 3 * c2.x + b.x) / 8;
+  const ly = (a.y + 3 * c1.y + 3 * c2.y + b.y) / 8;
   return (
     <>
       <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} />

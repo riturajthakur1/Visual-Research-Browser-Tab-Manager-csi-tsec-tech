@@ -10,6 +10,7 @@ const PATHS = {
   check: 'M5 12.5 10 17l9-10',
   x: 'M6 6l12 12M18 6 6 18',
   plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
   file: 'M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5zM14 3v5h5M9 13h6M9 17h6',

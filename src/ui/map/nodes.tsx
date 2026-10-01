@@ -39,21 +39,22 @@ export function GoalNode({ data }: NodeProps<Node<GoalData>>) {
 export function QuestionNode({ data, selected }: NodeProps<Node<QuestionData>>) {
   const { q, index, coverage } = data;
   const status = coverage?.status ?? 'gap';
+  const sources = coverage?.sources.length ?? 0;
   return (
     <div
       className={`n-question ${status} ${selected ? 'selected' : ''}`}
       style={{ width: SIZE.question.w, minHeight: SIZE.question.h }}
     >
       <Anchors />
-      <div className="row">
-        <span className={`qnum ${status}`}>{index + 1}</span>
-        <span className={`pill ${status}`}>
+      <div className="n-q-top">
+        <span className="n-q-num">Q{index + 1}</span>
+        <span className={`n-status ${status}`}>
           {STATUS_LABEL[status]}
           {coverage?.stale && ' · stale'}
         </span>
         <span className="spacer" />
-        {q.claimedBy && <Avatar member={q.claimedBy} size={18} title={`${q.claimedBy.name} is on it`} />}
-        <span className="hint">{coverage?.sources.length ?? 0} src</span>
+        {q.claimedBy && <Avatar member={q.claimedBy} size={16} title={`${q.claimedBy.name} is on it`} />}
+        <span className="n-q-src">{sources ? `${sources} ${sources === 1 ? 'source' : 'sources'}` : 'No sources'}</span>
       </div>
       <p className="clamp-3" dir="auto">
         {q.text}
@@ -71,26 +72,23 @@ export function PageNode({ data, selected }: NodeProps<Node<PageData>>) {
     <div
       className={`n-page ${status ?? 'parked'} ${suggested ? 'suggested' : ''} ${node.status} ${selected ? 'selected' : ''}`}
       style={{ width: SIZE.page.w, minHeight: SIZE.page.h }}
-      title={node.attach?.reason}
+      title={[node.site, PAGE_TYPE_LABEL[node.pageType], node.attach?.reason].filter(Boolean).join(' · ')}
     >
       <Anchors />
-      <div className="row">
-        <Favicon node={node} size={14} />
-        <span className="n-site truncate">{node.site}</span>
-        <span className="spacer" />
+      <Favicon node={node} size={20} />
+      <span className="n-page-title clamp-2" dir="auto">
+        {node.title}
+      </span>
+      <span className="n-page-meta">
         {byTeammate && <Avatar member={byTeammate} size={16} title={`Found by ${byTeammate.name}`} />}
         {node.highlights.length > 0 && (
-          <span className="badge">
+          <span className="badge" title={`${node.highlights.length} highlight${node.highlights.length > 1 ? 's' : ''}`}>
             <Icon name="highlight" size={11} />
             {node.highlights.length}
           </span>
         )}
         {node.notes && <Icon name="note" size={12} className="muted" />}
-      </div>
-      <p className="clamp-2" dir="auto">
-        {node.title}
-      </p>
-      <span className="n-type">{PAGE_TYPE_LABEL[node.pageType]}</span>
+      </span>
     </div>
   );
 }

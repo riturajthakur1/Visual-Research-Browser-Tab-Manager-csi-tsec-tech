@@ -6,8 +6,8 @@ import type { CoverageStatus, ID, Question, TrailNode } from './types';
 
 export const SIZE = {
   goal: { w: 300, h: 96 },
-  question: { w: 270, h: 104 },
-  page: { w: 236, h: 82 },
+  question: { w: 256, h: 92 },
+  page: { w: 224, h: 52 },
   search: { w: 200, h: 40 },
   note: { w: 220, h: 96 },
 };
@@ -28,9 +28,9 @@ export interface LayoutResult {
 
 const FAN = [0, 1, -1, 2, -2];
 const FAN_STEP = 0.36; // radians between neighbours in a fan
-const FIRST_RING = 250;
-const RING_GAP = 130;
-const CLEARANCE = 36;
+const FIRST_RING = 210;
+const RING_GAP = 112;
+const CLEARANCE = 30;
 const GAP = 14;
 
 /** Distance from a hub centre at which a page card in direction `a` no longer overlaps the hub card. */
@@ -73,7 +73,7 @@ export function layoutMap(
   const hubs: { id: ID; node?: Pick<TrailNode, 'pinned' | 'pos'> }[] = exploring
     ? searches.map((s) => ({ id: s.id, node: s }))
     : questions.map((q) => ({ id: q.id, node: q.pos ? { pinned: true, pos: q.pos } : undefined }));
-  const radius = Math.max(420, hubs.length * 78);
+  const radius = Math.max(360, hubs.length * 68);
   put('goal', 'goal', 0, 0, SIZE.goal);
 
   const hubAngle = new Map<ID, number>();
@@ -169,8 +169,8 @@ export function layoutMap(
 }
 
 export const STATUS_COLOR: Record<CoverageStatus, string> = {
-  gap: '#E5484D',
-  thin: '#E8A317',
-  covered: '#2F9E62',
-  conflict: '#8E4EC6',
+  gap: '#D93A32',
+  thin: '#D4920F',
+  covered: '#1F8A5B',
+  conflict: '#7C4DC4',
 };

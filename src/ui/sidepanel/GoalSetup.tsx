@@ -218,7 +218,7 @@ export function GoalSetup({
             {rows.map((r, i) => (
               <li key={r.key} className="draft-q card">
                 <div className="row">
-                  <span className="qnum">{i + 1}</span>
+                  <span className="qnum">Q{i + 1}</span>
                   <textarea
                     className="textarea q-input"
                     dir="auto"

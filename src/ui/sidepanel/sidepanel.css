@@ -13,7 +13,7 @@
   top: 0;
   z-index: 10;
   /* Mostly opaque so cards scrolling underneath stay out of the way. */
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  background: color-mix(in srgb, var(--bg) 95%, transparent);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--glass-edge);
@@ -25,7 +25,7 @@
 }
 .logo {
   border-radius: 7px;
-  box-shadow: 0 1px 2px rgb(30 23 20 / 12%);
+  box-shadow: 0 1px 2px rgb(24 24 27 / 12%);
 }
 .brand-name {
   font-size: 15px;
@@ -256,42 +256,45 @@ p {
 .qnum {
   display: inline-grid;
   place-items: center;
-  width: 22px;
+  min-width: 28px;
   height: 22px;
+  padding: 0 6px;
   flex: none;
-  border-radius: 50%;
-  background: var(--surface-3);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 700;
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 .qnum.gap {
-  background: var(--gap);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--gap-bg);
+  background: var(--gap-bg);
+  color: var(--gap);
 }
 .qnum.thin {
-  background: var(--thin);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--thin-bg);
+  background: var(--thin-bg);
+  color: var(--thin);
 }
 .qnum.covered {
-  background: var(--covered);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--covered-bg);
+  background: var(--covered-bg);
+  color: var(--covered);
 }
 .qnum.conflict {
-  background: var(--conflict);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--conflict-bg);
+  background: var(--conflict-bg);
+  color: var(--conflict);
 }
 .qnum-btn {
   border: none;
   background: none;
   padding: 0;
+  margin-top: -1px;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 8px;
+  transition: transform 0.25s var(--spring);
+}
+.qnum-btn:active {
+  transform: scale(0.92);
 }
 
 /* --- Route --------------------------------------------------------------------- */
@@ -300,12 +303,34 @@ p {
   flex-direction: column;
   gap: 12px;
 }
+.destination {
+  padding: 14px 16px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 18px 40px -22px rgb(0 0 0 / 55%);
+}
+.destination .eyebrow {
+  color: inherit;
+  opacity: 0.55;
+}
+.destination .btn.ghost {
+  color: inherit;
+  opacity: 0.75;
+}
+.destination .btn.ghost:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 10%);
+  box-shadow: none;
+}
 .destination .goal {
-  font-size: 17px;
-  font-weight: 650;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  margin: 2px 0 0;
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.012em;
+  margin: 4px 0 0;
 }
 .coverage .strip {
   display: flex;
@@ -354,12 +379,21 @@ p {
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--gap-bg) 80%, transparent), transparent 75%), var(--glass);
 }
-.next.done {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--covered-bg) 80%, transparent), transparent 75%), var(--glass);
+.next .eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 7px;
+  border-radius: 50%;
+  vertical-align: 1px;
+  background: var(--gap);
+  box-shadow: 0 0 0 3px var(--gap-bg);
+}
+.next.done .eyebrow::before {
+  background: var(--covered);
+  box-shadow: 0 0 0 3px var(--covered-bg);
 }
 .next p {
   font-weight: 550;
@@ -373,8 +407,6 @@ p {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 75%, transparent), transparent 75%), var(--glass);
 }
 .proposal-text {
   font-weight: 600;
@@ -392,20 +424,17 @@ p {
   gap: 10px;
 }
 .qcard {
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-rim);
+  background: var(--surface);
   border-radius: var(--radius);
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--card-shadow);
   overflow: hidden;
   scroll-margin-top: 110px;
-  transition:
-    border-color 0.2s var(--ease),
-    box-shadow 0.2s var(--ease);
+  transition: box-shadow 0.25s var(--ease);
 }
 .qcard:hover {
-  border-color: var(--border-strong);
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    0 14px 30px -18px rgb(24 24 27 / 30%);
 }
 .qcard-head {
   display: flex;
@@ -441,7 +470,7 @@ p {
   opacity: 1;
 }
 .qcard-body {
-  padding: 2px 12px 14px 44px;
+  padding: 2px 12px 14px 50px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -459,9 +488,19 @@ p {
 .search-chip {
   max-width: 100%;
   height: 26px;
-  padding: 0 10px;
+  padding: 0 11px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  outline: 1px dashed color-mix(in srgb, var(--ink-3) 55%, transparent);
+  outline-offset: -1px;
+  color: var(--ink-2);
+}
+button.search-chip:hover {
+  outline-style: solid;
+  outline-color: var(--border-strong);
   background: var(--surface);
-  border-color: var(--border);
+  color: var(--ink);
 }
 .search-chip.ran {
   opacity: 0.6;
@@ -495,22 +534,26 @@ p {
 }
 .page-row {
   padding: 10px 12px 8px;
-  border-radius: 14px;
-  background: var(--glass-thin);
-  border: 1px solid var(--glass-rim);
-  box-shadow: 0 0 0 1px var(--glass-edge);
+  border-radius: 13px;
+  background: var(--surface);
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 6px 16px -14px rgb(24 24 27 / 30%);
   display: flex;
   flex-direction: column;
   gap: 3px;
-  transition: border-color 0.18s var(--ease);
+  transition: box-shadow 0.25s var(--ease);
 }
 .page-row:hover {
-  background: var(--glass-strong);
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    0 10px 22px -16px rgb(24 24 27 / 35%);
 }
 .page-row.suggested {
   background: transparent;
-  border: 1px dashed var(--border-strong);
   box-shadow: none;
+  outline: 1px dashed color-mix(in srgb, var(--ink-3) 65%, transparent);
+  outline-offset: -1px;
 }
 .page-main {
   gap: 8px;
@@ -607,7 +650,7 @@ p {
   border-radius: 22px;
   z-index: 5;
   /* Mostly opaque: cards scroll underneath and their text must not show through. */
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-rim);
@@ -726,9 +769,14 @@ p {
   gap: 6px;
 }
 .group legend {
-  font-weight: 700;
-  font-size: 13px;
-  padding: 0 4px;
+  /* Inside the card rather than notched into its edge. */
+  float: left;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  font-weight: 650;
+  font-size: 13.5px;
+  letter-spacing: -0.005em;
 }
 .group .label {
   margin-top: 6px;
@@ -757,7 +805,7 @@ p {
   border-radius: 999px;
   background: var(--glass-thin);
   box-shadow:
-    inset 0 1px 2px rgb(30 23 20 / 6%),
+    inset 0 1px 2px rgb(24 24 27 / 6%),
     0 0 0 1px var(--glass-edge);
 }
 .segmented button {
@@ -780,7 +828,7 @@ p {
 .segmented button.on {
   background: var(--primary);
   color: var(--on-primary);
-  box-shadow: 0 1px 3px rgb(30 23 20 / 18%);
+  box-shadow: 0 1px 3px rgb(24 24 27 / 18%);
 }
 .input.narrow {
   width: 80px;
@@ -940,4 +988,73 @@ code {
   padding: 1px 5px;
   border-radius: 6px;
   background: var(--surface-2);
+}
+
+/* --- Motion ------------------------------------------------------------------------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Each screen settles in from top to bottom. */
+.route > *,
+.questions > *,
+.setup > *,
+.settings > *,
+.brief > * {
+  animation: rise 0.55s var(--ease) both;
+}
+.route > :nth-child(2),
+.questions > :nth-child(2),
+.setup > :nth-child(2),
+.settings > :nth-child(2),
+.brief > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.route > :nth-child(3),
+.questions > :nth-child(3),
+.setup > :nth-child(3),
+.settings > :nth-child(3),
+.brief > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.route > :nth-child(4),
+.questions > :nth-child(4),
+.setup > :nth-child(4),
+.settings > :nth-child(4),
+.brief > :nth-child(4) {
+  animation-delay: 120ms;
+}
+.route > :nth-child(n + 5),
+.questions > :nth-child(n + 5),
+.setup > :nth-child(n + 5),
+.settings > :nth-child(n + 5),
+.brief > :nth-child(n + 5) {
+  animation-delay: 160ms;
+}
+.qcard-body {
+  animation: unfold 0.4s var(--ease) both;
+}
+.page-row {
+  animation: rise 0.45s var(--ease) both;
+}
+.qnum {
+  transition:
+    background 0.5s var(--ease),
+    box-shadow 0.5s var(--ease);
 }

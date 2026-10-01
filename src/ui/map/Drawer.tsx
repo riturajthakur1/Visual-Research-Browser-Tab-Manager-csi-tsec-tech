@@ -89,7 +89,10 @@ function QuestionDetails({
       {coverage && (
         <div className="row">
           <StatusPill status={coverage.status} stale={coverage.stale} />
-          <span className="hint">{coverage.detail}</span>
+          {/* A conflict's explanation is shown in full just below. */}
+          {!(q.conflict?.verdict === 'conflict' && coverage.status === 'conflict') && (
+            <span className="hint">{coverage.detail}</span>
+          )}
         </div>
       )}
       {q.conflict?.verdict === 'conflict' && coverage?.status === 'conflict' && (

@@ -1,12 +1,13 @@
 import {
   Background,
-  Controls,
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
   getNodesBounds,
   getViewportForBounds,
   useReactFlow,
+  useViewport,
+  type Edge,
   type Node,
   type NodeMouseHandler,
   type Viewport,
@@ -61,6 +62,8 @@ function MapScreen() {
   );
   const [replay, setReplay] = useState<{ t: number; playing: boolean } | null>(null);
   const [query, setQuery] = useState('');
+  // Hovering a question (or one of its pages) brings that thread forward and fades the rest.
+  const [hoverQ, setHoverQ] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const fitted = useRef(false);
 
@@ -83,10 +86,34 @@ function MapScreen() {
         : { nodes: [], edges: [] },
     [ws, shown, data.links, coverage, showSearches, showTrail],
   );
+  const focus = useMemo(() => {
+    if (!hoverQ) return null;
+    const ids = new Set<string>(['goal', hoverQ]);
+    for (const n of shown.nodes) if (n.attach?.questionId === hoverQ) ids.add(n.id);
+    return ids;
+  }, [hoverQ, shown.nodes]);
   const nodes = useMemo(
-    () => graph.nodes.map((n) => ({ ...n, selected: selection?.id === n.id })),
-    [graph.nodes, selection],
+    () =>
+      graph.nodes.map((n) => ({
+        ...n,
+        selected: selection?.id === n.id,
+        className: [n.className, focus && !focus.has(n.id) ? 'dim' : ''].filter(Boolean).join(' '),
+      })),
+    [graph.nodes, selection, focus],
   );
+  const edges = useMemo<Edge[]>(
+    () =>
+      focus
+        ? graph.edges.map((e) =>
+            focus.has(e.source) && focus.has(e.target) ? e : { ...e, className: `${e.className ?? ''} dim` },
+          )
+        : graph.edges,
+    [graph.edges, focus],
+  );
+  const onNodeMouseEnter: NodeMouseHandler = (_, n) => {
+    if (n.type === 'question') setHoverQ(n.id);
+    else if (n.type === 'page') setHoverQ((n.data as PageData).node.attach?.questionId ?? null);
+  };
 
   useEffect(() => {
     if (!replay?.playing) return;
@@ -109,7 +136,7 @@ function MapScreen() {
     setTimeout(() => {
       if (focus) focusNode(focus);
       else if (ws?.viewport) void flow.setViewport(ws.viewport);
-      else void flow.fitView({ padding: 0.12, maxZoom: 1, duration: 300 });
+      else void flow.fitView({ padding: 0.16, maxZoom: 1, duration: 300 });
     }, 50);
   });
 
@@ -324,7 +351,9 @@ function MapScreen() {
           <div className="map-canvas">
             <ReactFlow
               nodes={nodes}
-              edges={graph.edges}
+              edges={edges}
+              onNodeMouseEnter={onNodeMouseEnter}
+              onNodeMouseLeave={() => setHoverQ(null)}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
               onNodeClick={onNodeClick}
@@ -342,8 +371,7 @@ function MapScreen() {
               nodesConnectable={false}
               proOptions={{ hideAttribution: true }}
             >
-              <Background gap={28} size={1.2} />
-              <Controls showInteractive={false} />
+              <Background gap={24} size={1} />
               <MiniMap
                 pannable
                 zoomable
@@ -354,23 +382,18 @@ function MapScreen() {
                   if (n.type === 'question') return STATUS_COLOR[(n.data as QuestionData).coverage?.status ?? 'gap'];
                   if (n.type === 'page') {
                     const s = (n.data as PageData).status;
-                    return s ? STATUS_COLOR[s] : '#9b8f86';
+                    return s ? STATUS_COLOR[s] : '#a1a1aa';
                   }
                   return 'transparent';
                 }}
               />
             </ReactFlow>
-            <div className="map-toggles card">
-              <label className="row">
-                <input type="checkbox" checked={showTrail} onChange={(e) => setShowTrail(e.target.checked)} /> Trail
-                links
-              </label>
-              <label className="row">
-                <input type="checkbox" checked={showSearches} onChange={(e) => setShowSearches(e.target.checked)} />{' '}
-                Searches
-              </label>
-              <span className="hint">Right-click the canvas to add a note</span>
-            </div>
+            <MapDock
+              showTrail={showTrail}
+              setShowTrail={setShowTrail}
+              showSearches={showSearches}
+              setShowSearches={setShowSearches}
+            />
             {replay && (
               <div className="replay card">
                 <button
@@ -416,6 +439,56 @@ function MapScreen() {
   );
 }
 
+/** Floating glass dock: what the map shows, and zoom. */
+function MapDock({
+  showTrail,
+  setShowTrail,
+  showSearches,
+  setShowSearches,
+}: {
+  showTrail: boolean;
+  setShowTrail: (v: boolean) => void;
+  showSearches: boolean;
+  setShowSearches: (v: boolean) => void;
+}) {
+  const flow = useReactFlow();
+  const { zoom } = useViewport();
+  return (
+    <div className="map-dock" role="toolbar" aria-label="Map controls">
+      <button
+        className={`dock-toggle ${showTrail ? 'on' : ''}`}
+        aria-pressed={showTrail}
+        onClick={() => setShowTrail(!showTrail)}
+        title="Show which page opened which"
+      >
+        Trail links
+      </button>
+      <button
+        className={`dock-toggle ${showSearches ? 'on' : ''}`}
+        aria-pressed={showSearches}
+        onClick={() => setShowSearches(!showSearches)}
+        title="Show the searches pages came from"
+      >
+        Searches
+      </button>
+      <span className="dock-sep" />
+      <button className="dock-btn" aria-label="Zoom out" onClick={() => void flow.zoomOut({ duration: 250 })}>
+        <Icon name="minus" size={14} />
+      </button>
+      <button className="dock-zoom" title="Reset to 100%" onClick={() => void flow.zoomTo(1, { duration: 300 })}>
+        {Math.round(zoom * 100)}%
+      </button>
+      <button className="dock-btn" aria-label="Zoom in" onClick={() => void flow.zoomIn({ duration: 250 })}>
+        <Icon name="plus" size={14} />
+      </button>
+      <button className="dock-toggle" onClick={() => void flow.fitView({ padding: 0.16, duration: 400 })}>
+        Fit
+      </button>
+      <span className="dock-hint">Right-click to add a note</span>
+    </div>
+  );
+}
+
 function Outline({
   questions,
   nodes,
@@ -433,7 +506,7 @@ function Outline({
         return (
           <section key={q.id} className="outline-q card">
             <div className="row">
-              <span className={`qnum ${c.status}`}>{i + 1}</span>
+              <span className={`qnum ${c.status}`}>Q{i + 1}</span>
               <h3 dir="auto">{q.text}</h3>
               <span className="spacer" />
               <StatusPill status={c.status} stale={c.stale} />
